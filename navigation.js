@@ -492,6 +492,239 @@ const navigationData = [
         { id: '4.16.5', title: 'Disaster Recovery Testing Methods' },
         { id: '4.16.6', title: 'Invoking Disaster Recovery Plans' }
       ]
+{
+  id: 'chapter-5',
+  title: 'Chapter 5 - Protection of Information Assets',
+  children: [
+    {
+      id: '5.1',
+      title: 'Information Asset Security Policies, Frameworks, Standards and Guidelines',
+      children: [
+        { id: '5.1.1', title: 'Information Asset Security Policies, Procedures and Guidelines' },
+        { id: '5.1.2', title: 'Information Security Frameworks and Standards' },
+        { id: '5.1.3', title: 'Information Security Baselines' }
+      ]
+    },
+
+    {
+      id: '5.2',
+      title: 'Physical and Environmental Controls',
+      children: [
+        { id: '5.2.1', title: 'Environmental Exposures and Controls' },
+        { id: '5.2.2', title: 'Physical Access Exposures and Controls' },
+        { id: '5.2.3', title: 'Industrial Control Systems Security' }
+      ]
+    },
+
+    {
+      id: '5.3',
+      title: 'Identity and Access Management',
+      children: [
+        { id: '5.3.1', title: 'Identity and Access Management' },
+        { id: '5.3.2', title: 'Authentication, Authorization and Accountability' },
+        { id: '5.3.3', title: 'Zero-Trust Architecture' },
+        { id: '5.3.4', title: 'Privileged Access Management' },
+        { id: '5.3.5', title: 'Directory Services' },
+        { id: '5.3.6', title: 'Identity Governance and Administration' },
+        { id: '5.3.7', title: 'Identity as a Service' },
+        { id: '5.3.8', title: 'System Access Permission' },
+        { id: '5.3.9', title: 'Types of Access Controls' },
+        { id: '5.3.10', title: 'Information Security and External Parties' },
+        { id: '5.3.11', title: 'Digital Rights Management' },
+        { id: '5.3.12', title: 'Logical Access' },
+        { id: '5.3.13', title: 'Access Control Software' },
+        { id: '5.3.14', title: 'Logon IDs and Passwords' },
+        { id: '5.3.15', title: 'Remote Access Security' },
+        { id: '5.3.16', title: 'Biometrics' },
+        { id: '5.3.17', title: 'Naming Conventions for Logical Access Controls' },
+        { id: '5.3.18', title: 'Federated Identity Management' },
+        { id: '5.3.19', title: 'Auditing Logical Access' }
+      ]
+    },
+
+    {
+      id: '5.4',
+      title: 'Network and Endpoint Security',
+      children: [
+        { id: '5.4.1', title: 'IS Network Infrastructure' },
+        { id: '5.4.2', title: 'Enterprise Network Architectures' },
+        { id: '5.4.3', title: 'Types of Networks' },
+        { id: '5.4.4', title: 'Network Services' },
+        { id: '5.4.5', title: 'Network Standards and Protocols' },
+        { id: '5.4.6', title: 'Virtual Private Networks' },
+        { id: '5.4.7', title: 'Network Attached Storage' },
+        { id: '5.4.8', title: 'Content Delivery Networks' },
+        { id: '5.4.9', title: 'Network Time Protocol' },
+        { id: '5.4.10', title: 'Applications in a Networked Environment' },
+        { id: '5.4.11', title: 'Network Infrastructure Security' },
+        { id: '5.4.12', title: 'Firewalls' },
+        { id: '5.4.13', title: 'Unified Threat Management (UTM)' },
+        { id: '5.4.14', title: 'Network Segmentation' },
+        { id: '5.4.15', title: 'Endpoint Security' }
+      ]
+    },
+
+    {
+      id: '5.5',
+      title: 'Data Loss Prevention',
+      children: [
+        { id: '5.5.1', title: 'Types of DLPs' },
+        { id: '5.5.2', title: 'Data Loss Risk' },
+        { id: '5.5.3', title: 'DLP Solutions and Data States' },
+        { id: '5.5.4', title: 'DLP Controls' },
+        { id: '5.5.5', title: 'DLP Content Analysis Methods' },
+        { id: '5.5.6', title: 'DLP Deployment Best Practices' },
+        { id: '5.5.7', title: 'DLP Risk, Limitations and Considerations' }
+      ]
+    },
+
+    {
+      id: '5.6',
+      title: 'Data Encryption',
+      children: [
+        { id: '5.6.1', title: 'Elements of Encryption Systems' },
+        { id: '5.6.2', title: 'Link Encryption and End-to-End Encryption' },
+        { id: '5.6.3', title: 'Symmetric Key Cryptographic Systems' },
+        { id: '5.6.4', title: 'Public (Asymmetric) Key Cryptographic Systems' },
+        { id: '5.6.5', title: 'Elliptic Curve Cryptography' },
+        { id: '5.6.6', title: 'Quantum Cryptography' },
+        { id: '5.6.7', title: 'Homomorphic Encryption' },
+        { id: '5.6.8', title: 'Digital Signatures' },
+        { id: '5.6.9', title: 'Digital Envelope' },
+        { id: '5.6.10', title: 'Applications of Cryptographic Systems' },
+        { id: '5.6.11', title: 'Kerberos' },
+        { id: '5.6.12', title: 'Secure Shell' },
+        { id: '5.6.13', title: 'Domain Name System Security Extensions' },
+        { id: '5.6.14', title: 'Email Security' },
+        { id: '5.6.15', title: 'Encryption Audit Procedures' }
+      ]
+    },
+
+    {
+      id: '5.7',
+      title: 'Public Key Infrastructure',
+      children: [
+        { id: '5.7.1', title: 'Digital Certificates' },
+        { id: '5.7.2', title: 'Key Management' },
+        { id: '5.7.3', title: 'Certificate Revocation' },
+        { id: '5.7.4', title: 'Certificate Revocation List' },
+        { id: '5.7.5', title: 'PKI Infrastructure Risk' },
+        { id: '5.7.6', title: 'Audit Procedures for PKI' }
+      ]
+    },
+
+    {
+      id: '5.8',
+      title: 'Cloud and Virtualized Environments',
+      children: [
+        { id: '5.8.1', title: 'Virtualization' },
+        { id: '5.8.2', title: 'Virtual Circuits' },
+        { id: '5.8.3', title: 'Virtual Local Area Network' },
+        { id: '5.8.4', title: 'Virtual Storage Area Networks' },
+        { id: '5.8.5', title: 'Software-Defined Networking' },
+        { id: '5.8.6', title: 'Containerization' },
+        { id: '5.8.7', title: 'Secure Cloud Migration' },
+        { id: '5.8.8', title: 'The Shared Responsibility Model' },
+        { id: '5.8.9', title: 'Key Risk in Cloud Environments' },
+        { id: '5.8.10', title: 'DevSecOps' }
+      ]
+    },
+
+    {
+      id: '5.9',
+      title: 'Mobile, Wireless and Internet of Things Devices',
+      children: [
+        { id: '5.9.1', title: 'Mobile Computing' },
+        { id: '5.9.2', title: 'Mobile Device Threats' },
+        { id: '5.9.3', title: 'Mobile Device Controls' },
+        { id: '5.9.4', title: 'Mobile Device Management' },
+        { id: '5.9.5', title: 'Bring Your Own Device' },
+        { id: '5.9.6', title: 'Internet Access on Mobile Devices' },
+        { id: '5.9.7', title: 'Audit Procedures for Mobile Devices' },
+        { id: '5.9.8', title: 'Mobile Payment Systems' },
+        { id: '5.9.9', title: 'Wireless Networks' },
+        { id: '5.9.10', title: 'Internet of Things' }
+      ]
+    },
+
+    {
+      id: '5.10',
+      title: 'Security Awareness Training and Programs',
+      children: [
+        { id: '5.10.1', title: 'The Information Security Learning Continuum' },
+        { id: '5.10.2', title: 'Benefits of a Security Awareness, Training and Education Program' },
+        { id: '5.10.3', title: 'Approach to Security Awareness, Training and Education' },
+        { id: '5.10.4', title: 'Conditions for a Successful Security Awareness Program' },
+        { id: '5.10.5', title: 'Conducting a Needs Assessment' },
+        { id: '5.10.6', title: 'Implementing an Awareness and Training Program' }
+      ]
+    },
+
+    {
+      id: '5.11',
+      title: 'Information System Attack Methods and Techniques',
+      children: [
+        { id: '5.11.1', title: 'Fraud Risk Factors' },
+        { id: '5.11.2', title: 'Computer Crime Issues and Exposures' },
+        { id: '5.11.3', title: 'Internet Threats and Security' },
+        { id: '5.11.4', title: 'Malware' },
+        { id: '5.11.5', title: 'Ransomware' }
+      ]
+    },
+
+    {
+      id: '5.12',
+      title: 'Security Testing Tools and Techniques',
+      children: [
+        { id: '5.12.1', title: 'Objectives of Security Testing' },
+        { id: '5.12.2', title: 'Security Assessments and Security Audits' },
+        { id: '5.12.3', title: 'Vulnerability Assessments' },
+        { id: '5.12.4', title: 'Penetration Tests' },
+        { id: '5.12.5', title: 'Threat Readiness / Information Security Teams' },
+        { id: '5.12.6', title: 'Security Testing Techniques' },
+        { id: '5.12.7', title: 'Security Operations Center' },
+        { id: '5.12.8', title: 'Security Testing Audit Procedures' }
+      ]
+    },
+
+    {
+      id: '5.13',
+      title: 'Security Monitoring Logs, Tools and Techniques',
+      children: [
+        { id: '5.13.1', title: 'Information Security Monitoring' },
+        { id: '5.13.2', title: 'Intrusion Detection Systems' },
+        { id: '5.13.3', title: 'Intrusion Prevention Systems' },
+        { id: '5.13.4', title: 'Audit Logging in Monitoring System Access' },
+        { id: '5.13.5', title: 'Protecting Log Data' },
+        { id: '5.13.6', title: 'Security Information and Event Management' },
+        { id: '5.13.7', title: 'Security Monitoring Tools' }
+      ]
+    },
+
+    {
+      id: '5.14',
+      title: 'Security Incident Response Management',
+      children: [
+        { id: '5.14.1', title: 'Incident Response Process' },
+        { id: '5.14.2', title: 'Computer Security Incident Response Team' },
+        { id: '5.14.3', title: 'Incident Response Plan' },
+        { id: '5.14.4', title: 'Security Orchestration, Automation and Response' }
+      ]
+    },
+
+    {
+      id: '5.15',
+      title: 'Evidence Collection and Forensics',
+      children: [
+        { id: '5.15.1', title: 'Types of Investigations' },
+        { id: '5.15.2', title: 'Types of Computer Forensics' },
+        { id: '5.15.3', title: 'Phases of Computer Forensics' },
+        { id: '5.15.4', title: 'Audit Considerations' },
+        { id: '5.15.5', title: 'Computer Forensic Techniques' },
+        { id: '5.15.6', title: 'Computer Forensics Tools' },
+        { id: '5.15.7', title: 'Chain of Custody' },
+        { id: '5.15.8', title: 'Best Practices to Secure Digital Evidence' }
+      ]
     }
   ]
 },
