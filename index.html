@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CISA Terminator</title>
 
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<header>
+    <h1>CISA Terminator</h1>
+    <p>Certification Learning Platform</p>
+</header>
+
+<div class="container">
+
+    <aside class="sidebar">
+
+        <h2>Documents</h2>
+
+        <input
+            type="file"
+            id="pdfUpload"
+            accept=".pdf"
+        >
+
+        <button id="uploadBtn">
+            Add PDF
+        </button>
+
+        <hr>
+
+        <h3>My Documents</h3>
+
+        <ul id="documentList">
+            <li>No document uploaded</li>
+        </ul>
+
+        <hr>
+
+        <h3>Domains</h3>
+
+        <ul id="domainList">
+            <li>Domain 1</li>
+            <li>Domain 2</li>
+            <li>Domain 3</li>
+            <li>Domain 4</li>
+            <li>Domain 5</li>
+        </ul>
+
+    </aside>
+
+    <main class="workspace">
+
+        <div class="reader">
+
+            <h2>Reader</h2>
+
+            <div id="readerContent">
+
+                <h3>Welcome</h3>
+
+                <p>
+                    Upload your Review PDF to begin learning.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="tools">
+
+            <h2>Learning Tools</h2>
+
+            <button>Generate Summary</button>
+
+            <button>Generate Cheat Sheet</button>
+
+            <button>Generate Flashcards</button>
+
+            <button>Generate Process Map</button>
+
+            <button>Generate Concept Map</button>
+
+            <button>Create Notes</button>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
