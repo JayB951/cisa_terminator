@@ -6,22 +6,63 @@
 <title>CISA Terminator</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6f9;}
-header{background:#1e293b;color:white;padding:16px;}
-.container{display:flex;height:calc(100vh - 64px);}
-.sidebar{width:350px;background:white;border-right:1px solid #ddd;overflow:auto;padding:15px;}
-.content{flex:1;background:white;overflow:auto;padding:20px;}
-.card{border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:15px;}
-button{padding:10px 16px;cursor:pointer;}
-.chapter{margin-top:12px;font-weight:bold;}
-.section{margin-left:20px;cursor:pointer;padding:4px;}
-.section:hover{background:#eef;}
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f4f6f9;
+}
+header{
+    background:#1e293b;
+    color:white;
+    padding:16px;
+}
+.container{
+    display:flex;
+    height:calc(100vh - 64px);
+}
+.sidebar{
+    width:350px;
+    background:white;
+    border-right:1px solid #ddd;
+    overflow:auto;
+    padding:15px;
+}
+.content{
+    flex:1;
+    background:white;
+    overflow:auto;
+    padding:20px;
+}
+.card{
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:15px;
+}
+button{
+    padding:10px 16px;
+    cursor:pointer;
+}
+.chapter{
+    margin-top:12px;
+    font-weight:bold;
+}
+.section{
+    margin-left:20px;
+    cursor:pointer;
+    padding:4px;
+}
+.section:hover{
+    background:#eef;
+}
 </style>
 </head>
 
 <body>
 
-<header><h1>CISA Terminator</h1></header>
+<header>
+<h1>CISA Terminator</h1>
+</header>
 
 <div class="container">
 
@@ -33,7 +74,7 @@ button{padding:10px 16px;cursor:pointer;}
 <label>Review TXT:</label><br>
 <input type="file" id="reviewFile" accept=".txt"><br><br>
 
-<h3>Domains (5 file)</h3>
+<h3>Domains (5 TXT)</h3>
 
 <label>Domain 1:</label><br>
 <input type="file" id="dom1" accept=".txt"><br><br>
@@ -79,5 +120,6 @@ button{padding:10px 16px;cursor:pointer;}
 </div>
 
 <script src="app.js"></script>
+
 </body>
 </html>
