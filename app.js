@@ -138,3 +138,118 @@ importTxtBtn?.addEventListener(
 
     }
 );
+function parseReview(text) {
+
+    reviewStructure = [];
+
+    const lines =
+        text.split("\n");
+
+    let currentChapter = null;
+
+    for (let i = 0; i < lines.length; i++) {
+
+        const line =
+            lines[i].trim();
+
+        if (
+            /^Chapter\s+\d+/i.test(line)
+        ) {
+
+            const chapterNumber =
+                line.match(/\d+/)[0];
+
+            const title =
+                (lines[i + 1] || "")
+                .trim();
+
+            currentChapter = {
+
+                id: chapterNumber,
+
+                title,
+
+                sections: []
+
+            };
+
+            reviewStructure.push(
+                currentChapter
+            );
+
+            continue;
+        }
+
+        if (!currentChapter)
+            continue;
+
+        const sectionMatch =
+            line.match(
+                /^(\d+\.\d+)\s+(.+)/
+            );
+
+        if (sectionMatch) {
+
+            currentChapter.sections.push({
+
+                id: sectionMatch[1],
+
+                title: sectionMatch[2]
+
+            });
+        }
+    }
+
+    renderReviewTree();
+}
+function renderReviewTree() {
+
+    const domainList =
+        document.getElementById(
+            "domainList"
+        );
+
+    domainList.innerHTML = "";
+
+    reviewStructure.forEach(
+        chapter => {
+
+            const li =
+                document.createElement(
+                    "li"
+                );
+
+            li.innerHTML = `
+                <strong>
+                    Chapter ${chapter.id}
+                </strong>
+                <br>
+                ${chapter.title}
+            `;
+
+            domainList.appendChild(
+                li
+            );
+
+            chapter.sections.forEach(
+                section => {
+
+                    const sec =
+                        document.createElement(
+                            "li"
+                        );
+
+                    sec.style.paddingLeft =
+                        "20px";
+
+                    sec.textContent =
+                        `${section.id} ${section.title}`;
+
+                    domainList.appendChild(
+                        sec
+                    );
+                }
+            );
+        }
+    );
+}
