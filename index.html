@@ -2,113 +2,131 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>CISA Terminator</title>
 
-<link rel="stylesheet" href="styles.css">
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+}
+
+header{
+    background:#1e293b;
+    color:white;
+    padding:16px;
+}
+
+.container{
+    display:flex;
+    height:calc(100vh - 64px);
+}
+
+.sidebar{
+    width:350px;
+    background:white;
+    border-right:1px solid #ddd;
+    overflow:auto;
+    padding:15px;
+}
+
+.content{
+    flex:1;
+    background:white;
+    overflow:auto;
+    padding:20px;
+}
+
+.card{
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:15px;
+}
+
+button{
+    padding:10px 16px;
+    cursor:pointer;
+}
+
+.chapter{
+    margin-top:12px;
+    font-weight:bold;
+}
+
+.section{
+    margin-left:20px;
+    cursor:pointer;
+    padding:4px;
+}
+
+.section:hover{
+    background:#eef;
+}
+
+textarea{
+    width:100%;
+    height:200px;
+}
+
+</style>
 </head>
 
 <body>
 
 <header>
-    <h1>CISA Terminator</h1>
-    <p>Certification Learning Platform</p>
+<h1>CISA Terminator</h1>
 </header>
 
 <div class="container">
 
-    <aside class="sidebar">
+<div class="sidebar">
 
-        <h2>Documents</h2>
-
-        <input
-            type="file"
-            id="pdfUpload"
-            accept=".pdf"
-        >
-
-        <button id="uploadBtn">
-            Add PDF
-        </button>
-
-        <hr>
-
-        <h3>My Documents</h3>
-
-        <ul id="documentList">
-            <li>No document uploaded</li>
-        </ul>
-
-        <hr>
 <div class="card">
-    <h3>Review Import</h3>
 
-    <input
-        type="file"
-        id="txtUpload"
-        accept=".txt">
+<h3>Review Import</h3>
 
-    <button id="importTxtBtn">
-        Import Review TXT
-    </button>
-</div>
-        <h3>Domains</h3>
+<input
+type="file"
+id="txtFile"
+accept=".txt">
 
-        <ul id="domainList">
-            <li>Domain 1</li>
-            <li>Domain 2</li>
-            <li>Domain 3</li>
-            <li>Domain 4</li>
-            <li>Domain 5</li>
-        </ul>
+<br><br>
 
-    </aside>
-
-    <main class="workspace">
-
-        <div class="reader">
-
-            <h2>Reader</h2>
-
-            <div id="readerContent">
-
-                <h3>Welcome</h3>
-
-                <p>
-                    Upload your Review PDF to begin learning.
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="tools">
-
-            <h2>Learning Tools</h2>
-
-            <button>Generate Summary</button>
-
-            <button>Generate Cheat Sheet</button>
-
-            <button>Generate Flashcards</button>
-
-            <button>Generate Process Map</button>
-
-            <button>Generate Concept Map</button>
-
-            <button>Create Notes</button>
-
-        </div>
-
-    </main>
+<button id="importBtn">
+Import TXT
+</button>
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-</script>
+<div class="card">
+
+<h3>Knowledge Tree</h3>
+
+<div id="tree"></div>
+
+</div>
+
+</div>
+
+<div class="content">
+
+<h2 id="contentTitle">
+Welcome
+</h2>
+
+<div id="contentArea">
+
+Importáld a Review TXT fájlt.
+
+</div>
+
+</div>
+
+</div>
 
 <script src="app.js"></script>
 
