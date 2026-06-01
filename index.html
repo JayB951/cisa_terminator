@@ -86,52 +86,42 @@ textarea{
 <div class="sidebar">
 
 <div class="card">
-
 <h3>Review Import</h3>
 
-<input
-type="file"
-id="txtFile"
-accept=".txt">
-
+<input type="file" id="txtFile" accept=".txt">
 <br><br>
 
-<button id="importBtn">
-Import TXT
-</button>
+<button id="importBtn">Import TXT</button>
+<br><br>
 
+<button id="clearBtn" style="background:#c62828;color:white;">
+Clear DB
+</button>
 </div>
 
 <div class="card">
-
 <h3>Knowledge Tree</h3>
-
 <div id="tree"></div>
+</div>
 
+<div class="card">
+<h3>Study Tools</h3>
+<button onclick="showSummary()">Summary</button>
+<button onclick="showFlashcards()">Flashcards</button>
+<button onclick="showKeyTerms()">Key Terms</button>
+<button onclick="showCheatSheet()">Cheat Sheet</button>
+<button onclick="showLogicalMap()">Logical Map</button>
 </div>
 
 </div>
 
 <div class="content">
-
-<h2 id="contentTitle">
-Welcome
-</h2>
-
-<div id="contentArea">
-
-Importáld a Review TXT fájlt.
-
+<h2 id="contentTitle">Welcome</h2>
+<div id="contentArea">Importáld a Review TXT fájlt.</div>
 </div>
 
 </div>
 
-</div>
-<script>
-window.addEventListener("load", () => {
-    initDB();
-});
-</script>
 <script src="app.js"></script>
 
 </body>
