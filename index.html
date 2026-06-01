@@ -1,124 +1,330 @@
 <!DOCTYPE html>
 <html lang="hu">
+
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CISA Terminator – Domain Mode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>CISA Terminator</title>
 
 <style>
+
+*{
+    box-sizing:border-box;
+}
+
 body{
     margin:0;
     font-family:Arial, sans-serif;
     background:#f4f6f9;
 }
+
 header{
     background:#1e293b;
     color:white;
-    padding:16px;
+    padding:15px 20px;
 }
+
 .container{
     display:flex;
-    height:calc(100vh - 64px);
+    height:calc(100vh - 70px);
 }
+
 .sidebar{
-    width:350px;
+    width:320px;
     background:white;
     border-right:1px solid #ddd;
     overflow:auto;
     padding:15px;
 }
-.content{
+
+.viewer{
     flex:1;
-    background:white;
-    overflow:auto;
-    padding:20px;
+    background:#f8f9fa;
 }
+
+.tools{
+    width:320px;
+    background:white;
+    border-left:1px solid #ddd;
+    overflow:auto;
+    padding:15px;
+}
+
 .card{
     border:1px solid #ddd;
     border-radius:8px;
     padding:12px;
     margin-bottom:15px;
 }
+
+input{
+    width:100%;
+    padding:8px;
+}
+
 button{
-    padding:10px 16px;
+    padding:10px 15px;
     cursor:pointer;
 }
+
 .domain{
-    margin-top:12px;
     font-weight:bold;
+    margin-top:12px;
     cursor:pointer;
+    padding:6px;
 }
+
 .domain:hover{
     background:#eef;
 }
+
 .topic{
-    margin-left:20px;
-    cursor:pointer;
     padding:4px;
+    margin-left:18px;
+    cursor:pointer;
 }
+
 .topic:hover{
     background:#eef;
 }
+
+#pdfViewer{
+    width:100%;
+    height:100%;
+    border:none;
+}
+
+textarea{
+    width:100%;
+    height:200px;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>CISA Terminator – Domain Mode</h1>
+<h1>CISA Terminator</h1>
 </header>
 
 <div class="container">
 
-<div class="sidebar">
+    <!-- BAL OLDAL -->
 
-<div class="card">
-<h3>Domain Import</h3>
+    <div class="sidebar">
 
-<label>Domain 1:</label><br>
-<input type="file" id="dom1" accept=".txt"><br><br>
+        <div class="card">
 
-<label>Domain 2:</label><br>
-<input type="file" id="dom2" accept=".txt"><br><br>
+            <h3>Review Source</h3>
 
-<label>Domain 3:</label><br>
-<input type="file" id="dom3" accept=".txt"><br><br>
+            <input
+                type="text"
+                id="driveLink"
+                placeholder="Google Drive share link">
 
-<label>Domain 4:</label><br>
-<input type="file" id="dom4" accept=".txt"><br><br>
+            <br><br>
 
-<label>Domain 5:</label><br>
-<input type="file" id="dom5" accept=".txt"><br><br>
+            <button onclick="loadPdf()">
+                Load Review
+            </button>
 
-<button id="importBtn">Import Domains</button><br><br>
+        </div>
 
-<button id="clearBtn" style="background:#c62828;color:white;">Clear</button>
+        <div class="card">
+
+            <h3>CISA Navigation</h3>
+
+            <div id="navigation"></div>
+
+        </div>
+
+    </div>
+
+    <!-- KÖZÉP -->
+
+    <div class="viewer">
+
+        <iframe
+            id="pdfViewer">
+        </iframe>
+
+    </div>
+
+    <!-- JOBB OLDAL -->
+
+    <div class="tools">
+
+        <div class="card">
+
+            <h3>Notes</h3>
+
+            <textarea
+                placeholder="Jegyzetek..."></textarea>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Study Tools</h3>
+
+            <button>Summary</button><br><br>
+            <button>Cheat Sheet</button><br><br>
+            <button>Flashcards</button><br><br>
+            <button>Logical Map</button>
+
+        </div>
+
+    </div>
+
 </div>
 
-<div class="card">
-<h3>Domains</h3>
-<div id="tree"></div>
-</div>
+<script>
 
-<div class="card">
-<h3>Study Tools</h3>
-<button onclick="showSummary()">Summary</button>
-<button onclick="showFlashcards()">Flashcards</button>
-<button onclick="showKeyTerms()">Key Terms</button>
-<button onclick="showCheatSheet()">Cheat Sheet</button>
-<button onclick="showLogicalMap()">Logical Map</button>
-</div>
+let pdfBaseUrl = "";
 
-</div>
+const navigation = {
 
-<div class="content">
-<h2 id="contentTitle">Welcome</h2>
-<div id="contentArea">Importáld az 5 domain TXT-t.</div>
-</div>
+    "Domain 1":[
+        { title:"1.1 IS Audit Standards", page:31 },
+        { title:"1.2 Types of Audits", page:34 },
+        { title:"1.3 Risk-Based Audit Planning", page:38 },
+        { title:"1.4 Types of Controls", page:43 },
+        { title:"1.5 Audit Project Management", page:53 },
+        { title:"1.6 Audit Testing", page:60 },
+        { title:"1.7 Audit Evidence Collection", page:63 },
+        { title:"1.8 Audit Data Analytics", page:66 },
+        { title:"1.9 Reporting and Communication", page:73 }
+    ],
 
-</div>
+    "Domain 2":[],
+    "Domain 3":[],
+    "Domain 4":[],
+    "Domain 5":[]
+};
 
-<script src="app.js"></script>
+function renderNavigation(){
+
+    const nav =
+        document.getElementById(
+            "navigation"
+        );
+
+    nav.innerHTML = "";
+
+    Object.keys(navigation)
+        .forEach(domain => {
+
+        const d =
+            document.createElement("div");
+
+        d.className =
+            "domain";
+
+        d.textContent =
+            domain;
+
+        nav.appendChild(d);
+
+        navigation[domain]
+            .forEach(item => {
+
+            const t =
+                document.createElement(
+                    "div"
+                );
+
+            t.className =
+                "topic";
+
+            t.textContent =
+                item.title;
+
+            t.onclick =
+                () => goToPage(
+                    item.page
+                );
+
+            nav.appendChild(t);
+
+        });
+
+    });
+
+}
+
+function loadPdf(){
+
+    const url =
+        document
+        .getElementById(
+            "driveLink"
+        )
+        .value
+        .trim();
+
+    if(!url){
+
+        alert(
+            "Adj meg egy Google Drive linket."
+        );
+
+        return;
+    }
+
+    const match =
+        url.match(
+            /\/d\/([^\/]+)/
+        );
+
+    if(!match){
+
+        alert(
+            "Nem sikerült kinyerni a file ID-t."
+        );
+
+        return;
+    }
+
+    const fileId =
+        match[1];
+
+    pdfBaseUrl =
+        `https://drive.google.com/file/d/${fileId}/preview`;
+
+    document
+        .getElementById(
+            "pdfViewer"
+        )
+        .src =
+        pdfBaseUrl;
+
+}
+
+function goToPage(page){
+
+    if(!pdfBaseUrl){
+
+        alert(
+            "Előbb töltsd be a Review PDF-et."
+        );
+
+        return;
+    }
+
+    document
+        .getElementById(
+            "pdfViewer"
+        )
+        .src =
+        `${pdfBaseUrl}#page=${page}`;
+
+}
+
+renderNavigation();
+
+</script>
 
 </body>
 </html>
