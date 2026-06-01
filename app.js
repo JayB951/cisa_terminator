@@ -1,45 +1,35 @@
-// ============================
-// CISA TERMINATOR - APP.JS
-// ============================
-
-let reviewData = [];        // Chapters + Sections
-let domainConfig = {};      // Feltöltött domains.json
-let activeContext = null;   // chapter / domain / section
+let reviewData = [];
+let domainConfig = {};
+let activeContext = null;
 let db = null;
 
-// ============================
-// INIT DB
-// ============================
+/* ============================
+   INIT DB
+============================ */
 function initDB() {
-    const request = indexedDB.open("cisa-terminator", 1);
+    const req = indexedDB.open("cisa-terminator", 1);
 
-    request.onupgradeneeded = (e) => {
+    req.onupgradeneeded = e => {
         db = e.target.result;
-        if (!db.objectStoreNames.contains("studyFiles")) {
-            db.createObjectStore("studyFiles", { keyPath: "id" });
-        }
+        if (!db.objectStoreNames.contains("data"))
+            db.createObjectStore("data", { keyPath: "id" });
     };
 
-    request.onsuccess = (e) => {
+    req.onsuccess = e => {
         db = e.target.result;
-        loadSavedFile();
-    };
-
-    request.onerror = (e) => {
-        console.error("DB error:", e);
+        loadSaved();
     };
 }
 
 initDB();
 
-// ============================
-// CLEAR DB
-// ============================
+/* ============================
+   CLEAR DB
+============================ */
 function clearDB() {
     if (!db) return;
-    const tx = db.transaction(["studyFiles"], "readwrite");
-    const store = tx.objectStore("studyFiles");
-    store.delete("active");
+    const tx = db.transaction(["data"], "readwrite");
+    tx.objectStore("data").delete("active");
 
     reviewData = [];
     domainConfig = {};
@@ -50,169 +40,181 @@ function clearDB() {
     document.getElementById("contentArea").innerHTML = "No data loaded.";
 }
 
-document.getElementById("clearBtn").addEventListener("click", clearDB);
+document.getElementById("clearBtn").onclick = clearDB;
 
-// ============================
-// SAVE TO DB
-// ============================
-function saveStudyData() {
+/* ============================
+   SAVE / LOAD
+============================ */
+function saveData() {
     if (!db) return;
-
-    const tx = db.transaction(["studyFiles"], "readwrite");
-    const store = tx.objectStore("studyFiles");
-
-    store.put({
+    const tx = db.transaction(["data"], "readwrite");
+    tx.objectStore("data").put({
         id: "active",
         reviewData,
-        domainConfig,
-        savedAt: new Date().toISOString()
+        domainConfig
     });
 }
 
-// ============================
-// LOAD FROM DB
-// ============================
-function loadSavedFile() {
-    const tx = db.transaction(["studyFiles"], "readonly");
-    const store = tx.objectStore("studyFiles");
-
-    const req = store.get("active");
+function loadSaved() {
+    const tx = db.transaction(["data"], "readonly");
+    const req = tx.objectStore("data").get("active");
 
     req.onsuccess = () => {
         if (req.result) {
-            reviewData = req.result.reviewData || [];
-            domainConfig = req.result.domainConfig || {};
+            reviewData = req.result.reviewData;
+            domainConfig = req.result.domainConfig;
             renderTree();
         }
     };
 }
 
-// ============================
-// FILE UPLOAD HANDLING
-// ============================
-const txtFile = document.getElementById("txtFile");
-const domainFile = document.getElementById("domainFile");
-const importBtn = document.getElementById("importBtn");
+/* ============================
+   LOAD DOMAIN FILES (5 TXT)
+============================ */
+async function loadDomainFiles() {
+    const files = [
+        document.getElementById("dom1").files[0],
+        document.getElementById("dom2").files[0],
+        document.getElementById("dom3").files[0],
+        document.getElementById("dom4").files[0],
+        document.getElementById("dom5").files[0]
+    ];
 
-importBtn.addEventListener("click", async () => {
-    const txt = txtFile.files[0];
-    const dom = domainFile.files[0];
+    const names = [
+        "Domain 1",
+        "Domain 2",
+        "Domain 3",
+        "Domain 4",
+        "Domain 5"
+    ];
 
-    if (!txt) {
-        alert("Töltsd fel a Review TXT-t!");
-        return;
+    const config = {};
+
+    for (let i = 0; i < 5; i++) {
+        if (!files[i]) continue;
+
+        const fullText = await files[i].text();
+
+        const words = fullText
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, "")
+            .split(/\s+/)
+            .filter(w => w.length > 5);
+
+        const freq = {};
+        words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+
+        const keywords = Object.entries(freq)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 25)
+            .map(x => x[0]);
+
+        const firstSentence = fullText.split(/[.!?]/)[0].trim();
+
+        config[names[i]] = {
+            keywords,
+            definition: firstSentence,
+            fullText
+        };
     }
 
-    if (!dom) {
-        alert("Töltsd fel a Domains JSON-t!");
-        return;
-    }
+    return config;
+}
 
-    const reviewText = await txt.text();
-    const domainText = await dom.text();
+/* ============================
+   IMPORT BUTTON
+============================ */
+document.getElementById("importBtn").onclick = async () => {
+    const reviewFile = document.getElementById("reviewFile").files[0];
+    if (!reviewFile) return;
 
-    domainConfig = JSON.parse(domainText);
-
+    const reviewText = await reviewFile.text();
     reviewData = parseReview(reviewText);
+
+    domainConfig = await loadDomainFiles();
+
     assignDomains(reviewData, domainConfig);
-
-    saveStudyData();
+    saveData();
     renderTree();
-});
+};
 
-// ============================
-// PARSER (stabil, domain-független)
-// ============================
+/* ============================
+   PARSER (stabil)
+============================ */
 function parseReview(text) {
     const chapters = [];
     const lines = text.split(/\r?\n/);
 
-    let currentChapter = null;
-    let currentSection = null;
+    let chapter = null;
+    let section = null;
 
-    for (let rawLine of lines) {
-        const line = rawLine.trim();
+    for (let raw of lines) {
+        const line = raw.trim();
         if (!line) continue;
 
-        // CHAPTER
         if (/^Chapter\s+\d+/i.test(line)) {
-            const num = line.match(/\d+/)[0];
-
-            currentChapter = {
-                id: num,
-                sections: [],
-                rawContent: ""
-            };
-
-            chapters.push(currentChapter);
-            currentSection = null;
+            chapter = { id: line.match(/\d+/)[0], sections: [], rawContent: "" };
+            chapters.push(chapter);
+            section = null;
             continue;
         }
 
-        if (!currentChapter) continue;
+        if (!chapter) continue;
 
-        currentChapter.rawContent += rawLine + "\n";
+        chapter.rawContent += raw + "\n";
 
-        // SECTION
-        const secMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
-        if (secMatch) {
-            currentSection = {
-                id: secMatch[1],
-                title: secMatch[2],
-                content: "",
-                domain: null
-            };
-
-            currentChapter.sections.push(currentSection);
+        const m = line.match(/^(\d+\.\d+)\s+(.+)/);
+        if (m) {
+            section = { id: m[1], title: m[2], content: "", domain: null };
+            chapter.sections.push(section);
             continue;
         }
 
-        if (currentSection) {
-            currentSection.content += rawLine + "\n";
-        }
+        if (section) section.content += raw + "\n";
     }
 
     return chapters;
 }
 
-// ============================
-// DOMAIN ASSIGNMENT
-// ============================
-function assignDomains(chapters, domainConfig) {
+/* ============================
+   DOMAIN ASSIGNMENT
+============================ */
+function assignDomains(chapters, config) {
     chapters.forEach(ch => {
         ch.sections.forEach(sec => {
             const text = (sec.title + " " + sec.content).toLowerCase();
 
-            for (const domainName in domainConfig) {
-                const keywords = domainConfig[domainName].keywords || [];
+            let bestDomain = "Uncategorized";
+            let bestScore = 0;
 
-                if (keywords.some(k => text.includes(k.toLowerCase()))) {
-                    sec.domain = domainName;
-                    break;
+            for (const dom in config) {
+                const keys = config[dom].keywords;
+                let score = 0;
+
+                keys.forEach(k => {
+                    if (text.includes(k)) score++;
+                });
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestDomain = dom;
                 }
             }
 
-            if (!sec.domain) {
-                sec.domain = "Uncategorized";
-            }
+            sec.domain = bestDomain;
         });
     });
 }
 
-// ============================
-// CONTEXT HANDLING
-// ============================
-function setActiveContext(obj) {
-    activeContext = obj;
+/* ============================
+   UI TREE
+============================ */
+function setActiveContext(x) { activeContext = x; }
+
+function escapeHtml(t) {
+    return t.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 
-function getActiveContext() {
-    return activeContext;
-}
-
-// ============================
-// UI: TREE RENDER
-// ============================
 function renderTree() {
     const tree = document.getElementById("tree");
     tree.innerHTML = "";
@@ -220,180 +222,124 @@ function renderTree() {
     reviewData.forEach(ch => {
         const c = document.createElement("div");
         c.className = "chapter";
-        c.textContent = `Chapter ${ch.id}`;
+        c.textContent = "Chapter " + ch.id;
         c.onclick = () => showChapter(ch);
         tree.appendChild(c);
 
-        // domain grouping
-        const domains = {};
-
-        ch.sections.forEach(sec => {
-            if (!domains[sec.domain]) domains[sec.domain] = [];
-            domains[sec.domain].push(sec);
+        const groups = {};
+        ch.sections.forEach(s => {
+            if (!groups[s.domain]) groups[s.domain] = [];
+            groups[s.domain].push(s);
         });
 
-        for (const domName in domains) {
-            const dom = document.createElement("div");
-            dom.textContent = "📁 " + domName;
-            dom.style.marginLeft = "10px";
-            dom.style.fontWeight = "bold";
-            dom.onclick = () => showDomain(ch, domName);
-            tree.appendChild(dom);
+        for (const dom in groups) {
+            const d = document.createElement("div");
+            d.textContent = "📁 " + dom;
+            d.style.marginLeft = "10px";
+            d.style.fontWeight = "bold";
+            d.onclick = () => showDomain(ch, dom);
+            tree.appendChild(d);
 
-            domains[domName].forEach(sec => {
-                const secDiv = document.createElement("div");
-                secDiv.className = "section";
-                secDiv.textContent = `${sec.id} ${sec.title}`;
-                secDiv.onclick = (e) => {
-                    e.stopPropagation();
-                    showSection(sec);
-                };
-                tree.appendChild(secDiv);
+            groups[dom].forEach(sec => {
+                const s = document.createElement("div");
+                s.className = "section";
+                s.textContent = sec.id + " " + sec.title;
+                s.onclick = e => { e.stopPropagation(); showSection(sec); };
+                tree.appendChild(s);
             });
         }
     });
 }
 
-// ============================
-// VIEW: CHAPTER
-// ============================
+/* ============================
+   VIEW HANDLERS
+============================ */
 function showChapter(ch) {
     setActiveContext(ch);
-    document.getElementById("contentTitle").textContent = `Chapter ${ch.id}`;
+    document.getElementById("contentTitle").textContent = "Chapter " + ch.id;
     document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(ch.rawContent)}</pre>`;
+        "<pre>" + escapeHtml(ch.rawContent) + "</pre>";
 }
 
-// ============================
-// VIEW: DOMAIN
-// ============================
-function showDomain(chapter, domainName) {
-    const domainSections = chapter.sections.filter(s => s.domain === domainName);
+function showDomain(ch, dom) {
+    const secs = ch.sections.filter(s => s.domain === dom);
 
     const ctx = {
         type: "domain",
-        name: domainName,
-        sections: domainSections,
-        content: domainSections.map(s => s.content).join("\n")
+        name: dom,
+        sections: secs,
+        content: secs.map(s => s.content).join("\n")
     };
 
     setActiveContext(ctx);
 
-    document.getElementById("contentTitle").textContent = domainName;
-
     let html = "";
-    domainSections.forEach(sec => {
-        html += `<b>${sec.id} ${sec.title}</b><br>`;
-        html += `<pre>${escapeHtml(sec.content)}</pre><hr>`;
+    secs.forEach(s => {
+        html += "<b>" + s.id + " " + s.title + "</b><br>";
+        html += "<pre>" + escapeHtml(s.content) + "</pre><hr>";
     });
 
+    document.getElementById("contentTitle").textContent = dom;
     document.getElementById("contentArea").innerHTML = html;
 }
 
-// ============================
-// VIEW: SECTION
-// ============================
 function showSection(sec) {
     setActiveContext(sec);
-    document.getElementById("contentTitle").textContent = `${sec.id} ${sec.title}`;
+    document.getElementById("contentTitle").textContent = sec.id + " " + sec.title;
     document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(sec.content)}</pre>`;
+        "<pre>" + escapeHtml(sec.content) + "</pre>";
 }
 
-// ============================
-// ESCAPE HTML
-// ============================
-function escapeHtml(text) {
-    return text
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-}
-
-// ============================
-// DEFINITION EXTRACTOR
-// ============================
+/* ============================
+   DEFINITIONS
+============================ */
 function extractDefinitions(ctx) {
     const defs = [];
 
-    // domain definíció
-    if (ctx.domain && domainConfig[ctx.domain]) {
+    if (ctx.name && domainConfig[ctx.name]) {
         defs.push({
-            term: ctx.domain,
-            definition: domainConfig[ctx.domain].definition || ""
+            term: ctx.name,
+            definition: domainConfig[ctx.name].definition
         });
     }
 
     const text = ctx.content || ctx.rawContent || "";
     const lines = text.split(/\r?\n/);
 
-    for (let line of lines) {
+    lines.forEach(line => {
         const m = line.match(/^([A-Za-z][A-Za-z0-9 _-]{2,})\s*[:\-–=]\s*(.+)$/);
-        if (m) {
-            defs.push({
-                term: m[1].trim(),
-                definition: m[2].trim()
-            });
-        }
-    }
+        if (m) defs.push({ term: m[1], definition: m[2] });
+    });
 
     return defs;
 }
 
-// ============================
-// STUDY TOOLS
-// =================
-function extractDefinitions(ctx) {
-    const defs = [];
-
-    if (ctx.domain && domainConfig[ctx.domain]) {
-        defs.push({
-            term: ctx.domain,
-            definition: domainConfig[ctx.domain].definition || ""
-        });
-    }
-
-    const text = ctx.content || ctx.rawContent || "";
-    const lines = text.split(/\r?\n/);
-
-    for (let line of lines) {
-        const m = line.match(/^([A-Za-z][A-Za-z0-9 _-]{2,})\s*[:\-–=]\s*(.+)$/);
-        if (m) {
-            defs.push({
-                term: m[1].trim(),
-                definition: m[2].trim()
-            });
-        }
-    }
-
-    return defs;
-}
-
+/* ============================
+   STUDY TOOLS
+============================ */
 function showSummary() {
     const ctx = activeContext;
     if (!ctx) return;
 
+    const secs = ctx.sections || [ctx];
     let text = "";
-    const sections = ctx.sections || [ctx];
 
-    sections.forEach(sec => {
-        text += `${sec.id} ${sec.title}\n`;
-    });
+    secs.forEach(s => text += s.id + " " + s.title + "\n");
 
     document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(text)}</pre>`;
+        "<pre>" + escapeHtml(text) + "</pre>";
 }
 
 function showFlashcards() {
     const ctx = activeContext;
     if (!ctx) return;
 
+    const secs = ctx.sections || [ctx];
     let html = "";
-    const sections = ctx.sections || [ctx];
 
-    sections.forEach(sec => {
-        const firstLine = sec.content.split("\n")[0] || "";
-        html += `<div class="card"><b>${sec.id} ${sec.title}</b><br>${firstLine}</div>`;
+    secs.forEach(s => {
+        const first = s.content.split("\n")[0] || "";
+        html += `<div class="card"><b>${s.id} ${s.title}</b><br>${first}</div>`;
     });
 
     document.getElementById("contentArea").innerHTML = html;
@@ -406,9 +352,7 @@ function showKeyTerms() {
     const defs = extractDefinitions(ctx);
     let html = "";
 
-    defs.forEach(d => {
-        html += `<b>${d.term}</b>: ${d.definition}<br><br>`;
-    });
+    defs.forEach(d => html += `<b>${d.term}</b>: ${d.definition}<br><br>`);
 
     document.getElementById("contentArea").innerHTML = html;
 }
@@ -417,28 +361,24 @@ function showCheatSheet() {
     const ctx = activeContext;
     if (!ctx) return;
 
+    const secs = ctx.sections || [ctx];
     let text = "";
-    const sections = ctx.sections || [ctx];
 
-    sections.forEach(sec => {
-        text += `- ${sec.id}: ${sec.title}\n`;
-    });
+    secs.forEach(s => text += `- ${s.id}: ${s.title}\n`);
 
     document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(text)}</pre>`;
+        "<pre>" + escapeHtml(text) + "</pre>";
 }
 
 function showLogicalMap() {
     const ctx = activeContext;
     if (!ctx) return;
 
+    const secs = ctx.sections || [ctx];
     let text = "";
-    const sections = ctx.sections || [ctx];
 
-    sections.forEach(sec => {
-        text += `• ${sec.id} ${sec.title}\n`;
-    });
+    secs.forEach(s => text += `• ${s.id} ${s.title}\n`);
 
     document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(text)}</pre>`;
+        "<pre>" + escapeHtml(text) + "</pre>";
 }
