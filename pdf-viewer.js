@@ -2,17 +2,10 @@
 // PDF VIEWER
 // =====================================
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "pdfjs/pdf.worker.min.js";
-
-// =====================================
-// STATE
-// =====================================
-
-let pdfDocument = null;
+let pdfDoc = null;
 let currentPage = 1;
 let totalPages = 0;
-let rendering = false;
+let currentScale = 1.25;
 
 const canvas =
     document.getElementById("pdfCanvas");
@@ -21,17 +14,37 @@ const ctx =
     canvas.getContext("2d");
 
 // =====================================
-// LOAD PDF
+// PDF.JS BETÖLTÉS
+// =====================================
+
+let pdfjsLib = null;
+
+async function initPdfJs() {
+
+    pdfjsLib = await import(
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs"
+    );
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    console.log("PDF.js loaded");
+}
+
+initPdfJs();
+
+// =====================================
+// PDF BETÖLTÉS
 // =====================================
 
 document
     .getElementById("loadPdfBtn")
     .addEventListener(
         "click",
-        loadPdf
+        openPdf
     );
 
-async function loadPdf() {
+async function openPdf() {
 
     const file =
         document
@@ -49,27 +62,28 @@ async function loadPdf() {
 
     try {
 
-        const arrayBuffer =
+        const buffer =
             await file.arrayBuffer();
 
-        pdfDocument =
+        pdfDoc =
             await pdfjsLib
                 .getDocument({
-                    data: arrayBuffer
+                    data: buffer
                 })
                 .promise;
 
         totalPages =
-            pdfDocument.numPages;
+            pdfDoc.numPages;
 
         currentPage = 1;
 
-        renderPage(currentPage);
+        renderPage(
+            currentPage
+        );
 
         console.log(
-            "PDF loaded:",
-            totalPages,
-            "pages"
+            "Loaded pages:",
+            totalPages
         );
 
     }
@@ -78,31 +92,30 @@ async function loadPdf() {
         console.error(err);
 
         alert(
-            "PDF megnyitási hiba."
+            "Nem sikerült megnyitni a PDF-et."
         );
 
     }
+
 }
 
 // =====================================
-// RENDER PAGE
+// PAGE RENDER
 // =====================================
 
 async function renderPage(pageNumber) {
 
-    if (!pdfDocument)
+    if (!pdfDoc)
         return;
 
-    rendering = true;
-
     const page =
-        await pdfDocument.getPage(
+        await pdfDoc.getPage(
             pageNumber
         );
 
     const viewport =
         page.getViewport({
-            scale: 1.4
+            scale: currentScale
         });
 
     canvas.width =
@@ -114,16 +127,15 @@ async function renderPage(pageNumber) {
     await page.render({
 
         canvasContext: ctx,
-        viewport: viewport
+        viewport
 
     }).promise;
 
     currentPage =
         pageNumber;
 
-    rendering = false;
-
     updatePageInfo();
+
 }
 
 // =====================================
@@ -133,67 +145,72 @@ async function renderPage(pageNumber) {
 function updatePageInfo() {
 
     document
-        .getElementById("pageInfo")
+        .getElementById(
+            "pageInfo"
+        )
         .innerText =
         `Page ${currentPage} / ${totalPages}`;
+
 }
 
 // =====================================
-// NEXT PAGE
+// NEXT
 // =====================================
 
 document
-    .getElementById("nextPageBtn")
+    .getElementById(
+        "nextPageBtn"
+    )
     .addEventListener(
         "click",
-        async () => {
-
-        if (!pdfDocument)
-            return;
+        () => {
 
         if (
-            currentPage >=
+            currentPage <
             totalPages
-        )
-            return;
+        ) {
 
-        await renderPage(
-            currentPage + 1
-        );
+            renderPage(
+                currentPage + 1
+            );
+
+        }
 
     });
 
 // =====================================
-// PREVIOUS PAGE
+// PREVIOUS
 // =====================================
 
 document
-    .getElementById("prevPageBtn")
+    .getElementById(
+        "prevPageBtn"
+    )
     .addEventListener(
         "click",
-        async () => {
-
-        if (!pdfDocument)
-            return;
+        () => {
 
         if (
-            currentPage <= 1
-        )
-            return;
+            currentPage > 1
+        ) {
 
-        await renderPage(
-            currentPage - 1
-        );
+            renderPage(
+                currentPage - 1
+            );
+
+        }
 
     });
 
 // =====================================
-// EXTERNAL NAVIGATION
+// NAVIGATION API
 // =====================================
 
-async function goToPdfPage(pageNumber) {
+async function goToPdfPage(
+    pageNumber
+) {
 
-    if (!pdfDocument)
+    if (!pdfDoc)
         return;
 
     if (
@@ -205,58 +222,94 @@ async function goToPdfPage(pageNumber) {
     await renderPage(
         pageNumber
     );
+
 }
-
-// =====================================
-// KEYBOARD NAVIGATION
-// =====================================
-
-document
-    .addEventListener(
-        "keydown",
-        async (event) => {
-
-        if (!pdfDocument)
-            return;
-
-        if (
-            event.key ===
-            "ArrowRight"
-        ) {
-
-            if (
-                currentPage <
-                totalPages
-            ) {
-
-                await renderPage(
-                    currentPage + 1
-                );
-
-            }
-        }
-
-        if (
-            event.key ===
-            "ArrowLeft"
-        ) {
-
-            if (
-                currentPage > 1
-            ) {
-
-                await renderPage(
-                    currentPage - 1
-                );
-
-            }
-        }
-
-    });
-
-// =====================================
-// PUBLIC API
-// =====================================
 
 window.goToPdfPage =
     goToPdfPage;
+
+// =====================================
+// ZOOM API
+// =====================================
+
+async function zoomIn() {
+
+    currentScale += 0.15;
+
+    await renderPage(
+        currentPage
+    );
+
+}
+
+async function zoomOut() {
+
+    currentScale -= 0.15;
+
+    if (
+        currentScale < 0.5
+    ) {
+
+        currentScale = 0.5;
+
+    }
+
+    await renderPage(
+        currentPage
+    );
+
+}
+
+window.zoomIn =
+    zoomIn;
+
+window.zoomOut =
+    zoomOut;
+
+// =====================================
+// KEYBOARD
+// =====================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+    if (!pdfDoc)
+        return;
+
+    if (
+        event.key ===
+        "ArrowRight"
+    ) {
+
+        if (
+            currentPage <
+            totalPages
+        ) {
+
+            renderPage(
+                currentPage + 1
+            );
+
+        }
+
+    }
+
+    if (
+        event.key ===
+        "ArrowLeft"
+    ) {
+
+        if (
+            currentPage > 1
+        ) {
+
+            renderPage(
+                currentPage - 1
+            );
+
+        }
+
+    }
+
+});
