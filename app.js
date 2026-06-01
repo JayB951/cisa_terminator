@@ -121,7 +121,7 @@ function parseReview(text) {
 
         const line = lines[i].trim();
 
-        // CHAPTER
+        // CHAPTER felismerés
         if (/^Chapter\s+\d+/i.test(line)) {
 
             const chapterNumber = line.match(/\d+/)[0];
@@ -135,6 +135,8 @@ function parseReview(text) {
             };
 
             chapters.push(currentChapter);
+            currentSection = null;
+
             continue;
         }
 
@@ -142,18 +144,25 @@ function parseReview(text) {
 
         currentChapter.rawContent += line + "\n";
 
-        // SECTION
-        const sectionMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
+        // SECTION felismerés (JAVÍTOTT!)
+        const isSection =
+            /^\d+\.\d+\s+[A-Za-z]/.test(line) &&   // csak ha szöveg is van utána
+            line.length < 120 &&                  // ne legyen hosszú mondat
+            !/million|billion|thousand/i.test(line); // számos mondatok kizárása
 
-        if (sectionMatch) {
+        if (isSection) {
+
+            const match = line.match(/^(\d+\.\d+)\s+(.+)/);
+
+            if (!match) continue;
 
             currentSection = {
-                id: sectionMatch[1],
-                title: sectionMatch[2],
+                id: match[1],
+                title: match[2],
                 content: ""
             };
 
-            let domain = detectDomain(line);
+            const domain = detectDomain(line);
 
             let domainObj =
                 currentChapter.domains.find(d => d.name === domain);
@@ -164,10 +173,11 @@ function parseReview(text) {
             }
 
             domainObj.sections.push(currentSection);
+
             continue;
         }
 
-        // SECTION CONTENT
+        // CONTENT gyűjtés
         if (currentSection) {
             currentSection.content += line + "\n";
         }
@@ -175,7 +185,6 @@ function parseReview(text) {
 
     return chapters;
 }
-
 // -------------------------
 // SIMPLE DOMAIN DETECTION
 // -------------------------
