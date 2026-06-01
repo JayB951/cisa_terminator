@@ -6,10 +6,9 @@ const txtFile = document.getElementById("txtFile");
 const tree = document.getElementById("tree");
 const contentTitle = document.getElementById("contentTitle");
 const contentArea = document.getElementById("contentArea");
+const clearBtn = document.getElementById("clearBtn");
 
-// --------------------
 // INIT DB
-// --------------------
 function initDB() {
     const request = indexedDB.open("cisa-terminator", 1);
 
@@ -32,9 +31,23 @@ function initDB() {
 
 initDB();
 
-// --------------------
+// CLEAR DB
+function clearDB() {
+    if (!db) return;
+    const tx = db.transaction(["studyFiles"], "readwrite");
+    const store = tx.objectStore("studyFiles");
+    store.delete("active");
+    reviewData = [];
+    tree.innerHTML = "";
+    contentTitle.textContent = "DB cleared";
+    contentArea.innerHTML = "No data loaded.";
+}
+
+if (clearBtn) {
+    clearBtn.addEventListener("click", clearDB);
+}
+
 // SAVE
-// --------------------
 function saveStudyData(data, fileName) {
     if (!db) return;
 
@@ -51,9 +64,7 @@ function saveStudyData(data, fileName) {
     });
 }
 
-// --------------------
 // LOAD
-// --------------------
 function loadSavedFile() {
     const tx = db.transaction(["studyFiles"], "readonly");
     const store = tx.objectStore("studyFiles");
@@ -68,9 +79,7 @@ function loadSavedFile() {
     };
 }
 
-// --------------------
 // IMPORT
-// --------------------
 importBtn.addEventListener("click", async () => {
     const file = txtFile.files[0];
     if (!file) return;
@@ -82,9 +91,7 @@ importBtn.addEventListener("click", async () => {
     saveStudyData(reviewData, file.name);
 });
 
-// --------------------
-// PARSER
-// --------------------
+// PARSER (duplikáció fix)
 function parseReview(text) {
     const chapters = [];
     const lines = text.split(/\r?\n/);
@@ -96,10 +103,24 @@ function parseReview(text) {
         line = line.trim();
         if (!line) continue;
 
+        // CHAPTER
         if (/^Chapter\s+\d+/i.test(line)) {
             const num = line.match(/\d+/)[0];
-            currentChapter = { id: num, title: "", domains: [], rawContent: "" };
-            chapters.push(currentChapter);
+
+            // ha már létezik ilyen chapter, azt folytatjuk
+            let existing = chapters.find(c => c.id === num);
+            if (existing) {
+                currentChapter = existing;
+            } else {
+                currentChapter = {
+                    id: num,
+                    title: "",
+                    domains: [],
+                    rawContent: ""
+                };
+                chapters.push(currentChapter);
+            }
+
             currentSection = null;
             continue;
         }
@@ -108,6 +129,7 @@ function parseReview(text) {
 
         currentChapter.rawContent += line + "\n";
 
+        // SECTION detection
         const sectionMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
         const isValidSection =
             sectionMatch &&
@@ -142,9 +164,7 @@ function parseReview(text) {
     return chapters;
 }
 
-// --------------------
 // DOMAIN DETECTION
-// --------------------
 function detectDomain(text) {
     const rules = [
         { name: "Governance", keywords: ["policy", "governance", "framework", "compliance"] },
@@ -164,9 +184,7 @@ function detectDomain(text) {
     return "General";
 }
 
-// --------------------
 // RENDER TREE
-// --------------------
 function renderTree() {
     tree.innerHTML = "";
 
@@ -198,25 +216,19 @@ function renderTree() {
     });
 }
 
-// --------------------
 // VIEW CHAPTER
-// --------------------
 function showChapter(ch) {
     contentTitle.textContent = `Chapter ${ch.id}`;
     contentArea.innerHTML = `<pre>${escapeHtml(ch.rawContent)}</pre>`;
 }
 
-// --------------------
 // VIEW SECTION
-// --------------------
 function showSection(s) {
     contentTitle.textContent = `${s.id} ${s.title}`;
     contentArea.innerHTML = `<pre>${escapeHtml(s.content)}</pre>`;
 }
 
-// --------------------
 // ESCAPE HTML
-// --------------------
 function escapeHtml(text) {
     return text
         .replaceAll("&", "&amp;")
@@ -224,9 +236,7 @@ function escapeHtml(text) {
         .replaceAll(">", "&gt;");
 }
 
-// --------------------
 // STUDY TOOLS
-// --------------------
 function generateSummary(chapter) {
     let summary = `Summary of Chapter ${chapter.id}\n\n`;
     chapter.domains.forEach(domain => {
@@ -289,50 +299,48 @@ function generateLogicalMap(chapter) {
     return map;
 }
 
-// --------------------
 // STUDY TOOL UI
-// --------------------
 function getActiveChapter() {
-     return reviewData[0] || null;
- }
+    return reviewData[0] || null;
+}
 
- function showSummary() {
-     const ch = getActiveChapter();
-     if (!ch) return;
-     contentTitle.textContent = "Summary";
-     contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
- }
+function showSummary() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Summary";
+    contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
+}
 
- function showFlashcards() {
-     const ch = getActiveChapter();
-     if (!ch) return;
-     const cards = generateFlashcards(ch);
-     let html = "";
-     cards.forEach(c => {
-         html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
-     });
-     contentTitle.textContent = "Flashcards";
-     contentArea.innerHTML = html;
- }
+function showFlashcards() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    const cards = generateFlashcards(ch);
+    let html = "";
+    cards.forEach(c => {
+        html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
+    });
+    contentTitle.textContent = "Flashcards";
+    contentArea.innerHTML = html;
+}
 
- function showKeyTerms() {
-     const ch = getActiveChapter();
-     if (!ch) return;
-     const terms = generateKeyTerms(ch);
-     contentTitle.textContent = "Key Terms";
-     contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
- }
+function showKeyTerms() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    const terms = generateKeyTerms(ch);
+    contentTitle.textContent = "Key Terms";
+    contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
+}
 
- function showCheatSheet() {
-     const ch = getActiveChapter();
-     if (!ch) return;
-     contentTitle.textContent = "Cheat Sheet";
-     contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
- }
+function showCheatSheet() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Cheat Sheet";
+    contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
+}
 
- function showLogicalMap() {
-     const ch = getActiveChapter();
-     if (!ch) return;
-     contentTitle.textContent = "Logical Map";
-     contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
- }
+function showLogicalMap() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Logical Map";
+    contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
+}
