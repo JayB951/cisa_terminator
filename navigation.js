@@ -215,8 +215,104 @@ const navigationData = [
         { id: '2.8.4', title: 'Key Performance Indicators (KPIs)' }
       ]
     }
+ {
+  id: 'chapter-3',
+  title: 'Chapter 3 - Information Systems Acquisition, Development and Implementation',
+  children: [
+    {
+      id: '3.1',
+      title: 'Project Governance and Management',
+      children: [
+        { id: '3.1.1', title: 'Project Management Practices' },
+        { id: '3.1.2', title: 'Project Management Structure' },
+        { id: '3.1.3', title: 'Project Management Roles and Responsibilities' },
+        { id: '3.1.4', title: 'Project Management Techniques' },
+        { id: '3.1.5', title: 'Portfolio/Program Management' },
+        { id: '3.1.6', title: 'Project Management Office' },
+        { id: '3.1.7', title: 'Project Benefits Realization' },
+        { id: '3.1.8', title: 'Project Initiation' },
+        { id: '3.1.9', title: 'Project Objectives' },
+        { id: '3.1.10', title: 'Project Planning' },
+        { id: '3.1.11', title: 'Project Execution' },
+        { id: '3.1.12', title: 'Project Controlling and Monitoring' },
+        { id: '3.1.13', title: 'Project Closing' },
+        { id: '3.1.14', title: "IS Auditor's Role in Project Management" }
+      ]
+    },
+
+    {
+      id: '3.2',
+      title: 'Business Case and Feasibility Analysis',
+      children: [
+        { id: '3.2.1', title: "IS Auditor's Role in Business Case Development" }
+      ]
+    },
+
+    {
+      id: '3.3',
+      title: 'System Development Methodologies',
+      children: [
+        { id: '3.3.1', title: 'Business Application Development' },
+        { id: '3.3.2', title: 'SDLC Models' },
+        { id: '3.3.3', title: 'SDLC Phases' },
+        { id: '3.3.4', title: "IS Auditor's Role in SDLC Project Management" },
+        { id: '3.3.5', title: 'Software Development Methods' },
+        { id: '3.3.6', title: 'System Development Tools and Productivity Aids' },
+        { id: '3.3.7', title: 'Infrastructure Development/Acquisition Practices' },
+        { id: '3.3.8', title: 'Hardware/Software Acquisition' },
+        { id: '3.3.9', title: 'System Software Acquisition' }
+      ]
+    },
+
+    {
+      id: '3.4',
+      title: 'Control Identification and Design',
+      children: [
+        { id: '3.4.1', title: 'Application Controls' },
+        { id: '3.4.2', title: 'Output Controls' }
+      ]
+    },
+
+    {
+      id: '3.5',
+      title: 'System Readiness and Implementation Testing',
+      children: [
+        { id: '3.5.1', title: 'Testing Classifications' },
+        { id: '3.5.2', title: 'Software Testing' },
+        { id: '3.5.3', title: 'Data Integrity Testing' },
+        { id: '3.5.4', title: 'Application Systems Testing' },
+        { id: '3.5.5', title: 'System Implementation' }
+      ]
+    },
+
+    {
+      id: '3.6',
+      title: 'Implementation Configuration and Release Management',
+      children: [
+        { id: '3.6.1', title: 'Configuration Management Systems' }
+      ]
+    },
+
+    {
+      id: '3.7',
+      title: 'System Migration, Infrastructure Deployment and Data Conversion',
+      children: [
+        { id: '3.7.1', title: 'Data Migration' },
+        { id: '3.7.2', title: 'Changeover (Go-Live or Cutover) Techniques' },
+        { id: '3.7.3', title: 'System Change Procedures and the Program Migration Process' },
+        { id: '3.7.4', title: 'System Software Implementation' },
+        { id: '3.7.5', title: 'Certification/Accreditation' }
+      ]
+    },
+
+    {
+      id: '3.8',
+      title: 'Postimplementation Review',
+      children: [
+        { id: '3.8.1', title: "IS Auditor's Role in Postimplementation Review" }
+      ]
+    }
   ]
-},
 },
 ];
 
