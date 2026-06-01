@@ -225,24 +225,49 @@ function escapeHtml(text) {
 }
 
 // --------------------
-// STUDY TOOLS
+// STUDY TOOL UI
 // --------------------
-function generateSummary(chapter) {
-    let summary = `Summary of Chapter ${chapter.id}\n\n`;
-    chapter.domains.forEach(domain => {
-        summary += `== ${domain.name} ==\n`;
-        domain.sections.forEach(sec => {
-            summary += `• ${sec.id} ${sec.title}\n`;
-        });
-        summary += "\n";
-    });
-    return summary;
+function getActiveChapter() {
+    return reviewData[0] || null;
 }
 
-function generateFlashcards(chapter) {
-    const cards = [];
-    chapter.domains.forEach(domain => {
-        domain.sections.forEach(sec => {
-            cards.push({
-                front: `${sec.id} ${sec.title}`,
-                back: sec.content.split
+function showSummary() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Summary";
+    contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
+}
+
+function showFlashcards() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    const cards = generateFlashcards(ch);
+    let html = "";
+    cards.forEach(c => {
+        html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
+    });
+    contentTitle.textContent = "Flashcards";
+    contentArea.innerHTML = html;
+}
+
+function showKeyTerms() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    const terms = generateKeyTerms(ch);
+    contentTitle.textContent = "Key Terms";
+    contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
+}
+
+function showCheatSheet() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Cheat Sheet";
+    contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
+}
+
+function showLogicalMap() {
+    const ch = getActiveChapter();
+    if (!ch) return;
+    contentTitle.textContent = "Logical Map";
+    contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
+}
