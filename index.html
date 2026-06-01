@@ -1,190 +1,25 @@
 <!DOCTYPE html>
 <html lang="hu">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+
 <title>CISA Terminator</title>
 
-<style>
+<link rel="stylesheet" href="styles.css">
 
-*{
-    box-sizing:border-box;
-}
-
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f4f6f9;
-}
-
-header{
-    background:#1e293b;
-    color:white;
-    padding:15px 20px;
-}
-
-.container{
-    display:flex;
-    height:calc(100vh - 70px);
-}
-
-/* BAL OLDAL */
-
-.sidebar{
-    width:320px;
-    background:white;
-    border-right:1px solid #ddd;
-    overflow:auto;
-    padding:15px;
-}
-
-/* KÖZÉP */
-
-.viewer{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    background:#fafafa;
-}
-
-/* JOBB OLDAL */
-
-.workspace{
-    width:380px;
-    background:white;
-    border-left:1px solid #ddd;
-    display:flex;
-    flex-direction:column;
-}
-
-/* KÁRTYÁK */
-
-.card{
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:12px;
-    margin-bottom:15px;
-}
-
-button{
-    padding:8px 12px;
-    cursor:pointer;
-}
-
-input{
-    width:100%;
-    padding:8px;
-}
-
-.domain{
-    font-weight:bold;
-    padding:6px;
-    cursor:pointer;
-}
-
-.domain:hover{
-    background:#eef;
-}
-
-.topic{
-    margin-left:20px;
-    padding:4px;
-    cursor:pointer;
-}
-
-.topic:hover{
-    background:#eef;
-}
-
-/* PDF */
-
-.viewer-toolbar{
-    padding:10px;
-    background:white;
-    border-bottom:1px solid #ddd;
-}
-
-#pdfCanvasContainer{
-    flex:1;
-    overflow:auto;
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    padding:20px;
-}
-
-#pdfCanvas{
-    border:1px solid #ddd;
-}
-
-/* WORKSPACE */
-
-.tabs{
-    display:flex;
-    border-bottom:1px solid #ddd;
-}
-
-.tab-btn{
-    flex:1;
-    border:none;
-    background:#f5f5f5;
-    padding:10px;
-}
-
-.tab-btn.active{
-    background:white;
-    font-weight:bold;
-}
-
-.tab-content{
-    display:none;
-    flex:1;
-    overflow:auto;
-    padding:15px;
-}
-
-.tab-content.active{
-    display:block;
-}
-
-textarea{
-    width:100%;
-    height:350px;
-    resize:none;
-}
-
-/* FLASHCARD */
-
-.flashcard{
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:10px;
-    margin-bottom:10px;
-}
-
-.stat-box{
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:10px;
-    margin-bottom:10px;
-}
-
-</style>
 </head>
-
 <body>
 
 <header>
-<h1>CISA Terminator</h1>
+    <h1>CISA Terminator</h1>
 </header>
 
 <div class="container">
 
-    <!-- BAL OLDAL -->
+    <!-- NAVIGATION -->
 
-    <div class="sidebar">
+    <aside class="sidebar">
 
         <div class="card">
 
@@ -195,27 +30,25 @@ textarea{
                 id="pdfFile"
                 accept=".pdf">
 
-            <br><br>
-
             <button id="loadPdfBtn">
-                Open Review PDF
+                Open PDF
             </button>
 
         </div>
 
         <div class="card">
 
-            <h3>CISA Navigation</h3>
+            <h3>Navigation</h3>
 
             <div id="navigation"></div>
 
         </div>
 
-    </div>
+    </aside>
 
-    <!-- KÖZÉP -->
+    <!-- PDF -->
 
-    <div class="viewer">
+    <main class="viewer">
 
         <div class="viewer-toolbar">
 
@@ -231,6 +64,15 @@ textarea{
                 ▶
             </button>
 
+            <input
+                type="number"
+                id="gotoPageInput"
+                placeholder="Page">
+
+            <button id="gotoPageBtn">
+                Go
+            </button>
+
         </div>
 
         <div id="pdfCanvasContainer">
@@ -239,156 +81,73 @@ textarea{
 
         </div>
 
-    </div>
+    </main>
 
-    <!-- JOBB OLDAL -->
+    <!-- WORKSPACE -->
 
-    <div class="workspace">
+    <aside class="workspace">
 
         <div class="tabs">
 
-            <button
-                class="tab-btn active"
-                data-tab="notesTab">
+            <button class="tab-btn active"
+                    data-tab="notesTab">
                 Notes
             </button>
 
-            <button
-                class="tab-btn"
-                data-tab="highlightsTab">
-                Highlights
-            </button>
-
-            <button
-                class="tab-btn"
-                data-tab="flashcardsTab">
+            <button class="tab-btn"
+                    data-tab="flashcardsTab">
                 Flashcards
             </button>
 
-            <button
-                class="tab-btn"
-                data-tab="cheatsTab">
-                Cheat Sheets
-            </button>
-
-            <button
-                class="tab-btn"
-                data-tab="statsTab">
+            <button class="tab-btn"
+                    data-tab="statsTab">
                 Stats
             </button>
 
         </div>
 
-        <!-- NOTES -->
-
-        <div
-            id="notesTab"
-            class="tab-content active">
-
-            <h3>Notes</h3>
+        <div id="notesTab"
+             class="tab-content active">
 
             <textarea
                 id="notes"
-                placeholder="Írd ide a jegyzeteidet...">
+                placeholder="Jegyzetek...">
             </textarea>
 
         </div>
 
-        <!-- HIGHLIGHTS -->
+        <div id="flashcardsTab"
+             class="tab-content">
 
-        <div
-            id="highlightsTab"
-            class="tab-content">
-
-            <h3>Highlights</h3>
-
-            <div id="highlightsList">
-
-                No highlights yet.
-
-            </div>
+            Flashcards coming soon.
 
         </div>
 
-        <!-- FLASHCARDS -->
+        <div id="statsTab"
+             class="tab-content">
 
-        <div
-            id="flashcardsTab"
-            class="tab-content">
-
-            <h3>Flashcards</h3>
-
-            <div id="flashcardsList">
-
-                <div class="flashcard">
-
-                    Flashcards coming soon.
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- CHEAT SHEETS -->
-
-        <div
-            id="cheatsTab"
-            class="tab-content">
-
-            <h3>Cheat Sheets</h3>
-
-            <div id="cheatSheetArea">
-
-                Cheat Sheets coming soon.
-
-            </div>
-
-        </div>
-
-        <!-- STATS -->
-
-        <div
-            id="statsTab"
-            class="tab-content">
-
-            <h3>Study Statistics</h3>
-
-            <div class="stat-box">
-
-                Total Study Time:
+            <p>
+                Study Time:
                 <span id="studyTime">
                     0 min
                 </span>
+            </p>
 
-            </div>
-
-            <div class="stat-box">
-
-                Notes Count:
+            <p>
+                Notes Length:
                 <span id="notesCount">
                     0
                 </span>
-
-            </div>
-
-            <div class="stat-box">
-
-                Flashcards:
-                <span id="flashcardCount">
-                    0
-                </span>
-
-            </div>
+            </p>
 
         </div>
 
-    </div>
+    </aside>
 
 </div>
 
-<script src="pdf-viewer.js"></script>
 <script src="navigation.js"></script>
+<script src="pdf-viewer.js"></script>
 <script src="app.js"></script>
 
 </body>
