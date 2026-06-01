@@ -312,8 +312,188 @@ const navigationData = [
         { id: '3.8.1', title: "IS Auditor's Role in Postimplementation Review" }
       ]
     }
+{
+  id: 'chapter-4',
+  title: 'Chapter 4 - Information Systems Operations and Business Resilience',
+  children: [
+    {
+      id: '4.1',
+      title: 'IT Components',
+      children: [
+        { id: '4.1.1', title: 'Networking' },
+        { id: '4.1.2', title: 'Computer Hardware Components and Architectures' },
+        { id: '4.1.3', title: 'Common Enterprise Back-End Devices' },
+        { id: '4.1.4', title: 'USB Mass Storage Devices' },
+        { id: '4.1.5', title: 'Wireless Communication Technologies' },
+        { id: '4.1.6', title: 'Hardware Maintenance Program' },
+        { id: '4.1.7', title: 'Hardware Reviews' }
+      ]
+    },
+
+    {
+      id: '4.2',
+      title: 'IT Asset Management'
+    },
+
+    {
+      id: '4.3',
+      title: 'Job Scheduling and Production Process Automation',
+      children: [
+        { id: '4.3.1', title: 'Job Scheduling Software' },
+        { id: '4.3.2', title: 'Scheduling Reviews' }
+      ]
+    },
+
+    {
+      id: '4.4',
+      title: 'System Interfaces',
+      children: [
+        { id: '4.4.1', title: 'Risk Associated With System Interfaces' },
+        { id: '4.4.2', title: 'Controls Associated With System Interfaces' }
+      ]
+    },
+
+    {
+      id: '4.5',
+      title: 'End-User Computing and Shadow IT',
+      children: [
+        { id: '4.5.1', title: 'End-User Computing' },
+        { id: '4.5.2', title: 'Shadow IT' }
+      ]
+    },
+
+    {
+      id: '4.6',
+      title: 'Systems Availability and Capacity Management',
+      children: [
+        { id: '4.6.1', title: 'IS Architecture and Software' },
+        { id: '4.6.2', title: 'Operating Systems' },
+        { id: '4.6.3', title: 'Access Control Software' },
+        { id: '4.6.4', title: 'Data Communications Software' },
+        { id: '4.6.5', title: 'Utility Programs' },
+        { id: '4.6.6', title: 'Software Licensing Issues' },
+        { id: '4.6.7', title: 'Source Code Management' },
+        { id: '4.6.8', title: 'Capacity Management' }
+      ]
+    },
+
+    {
+      id: '4.7',
+      title: 'Problem and Incident Management',
+      children: [
+        { id: '4.7.1', title: 'Problem Management' },
+        { id: '4.7.2', title: 'Process of Incident Handling' },
+        {
+          id: '4.7.3',
+          title: 'Detection, Documentation, Control, Resolution and Reporting of Abnormal Conditions'
+        },
+        { id: '4.7.4', title: 'Support/Help Desk' },
+        { id: '4.7.5', title: 'Network Management Tools' },
+        { id: '4.7.6', title: 'Problem Management Reporting Reviews' }
+      ]
+    },
+
+    {
+      id: '4.8',
+      title: 'IT Change, Configuration and Patch Management',
+      children: [
+        { id: '4.8.1', title: 'Patch Management' },
+        { id: '4.8.2', title: 'Release Management' },
+        { id: '4.8.3', title: 'IS Operations' }
+      ]
+    },
+
+    {
+      id: '4.9',
+      title: 'Operational Log Management',
+      children: [
+        { id: '4.9.1', title: 'Types of Logs' },
+        { id: '4.9.2', title: 'Log Management' }
+      ]
+    },
+
+    {
+      id: '4.10',
+      title: 'IT Service Level Management',
+      children: [
+        { id: '4.10.1', title: 'Service Level Agreements' },
+        { id: '4.10.2', title: 'Monitoring of Service Levels' },
+        { id: '4.10.3', title: 'Service Levels and Enterprise Architecture' }
+      ]
+    },
+
+    {
+      id: '4.11',
+      title: 'Database Management',
+      children: [
+        { id: '4.11.1', title: 'DBMS Architecture' },
+        { id: '4.11.2', title: 'Database Structure' },
+        { id: '4.11.3', title: 'Database Controls' },
+        { id: '4.11.4', title: 'Database Reviews' }
+      ]
+    },
+
+    {
+      id: '4.12',
+      title: 'Business Impact Analysis',
+      children: [
+        { id: '4.12.1', title: 'Classification of Operations and Criticality Analysis' }
+      ]
+    },
+
+    {
+      id: '4.13',
+      title: 'System and Operational Resilience',
+      children: [
+        { id: '4.13.1', title: 'Application Resiliency and Disaster Recovery Methods' },
+        { id: '4.13.2', title: 'Telecommunication Networks Resiliency and Disaster Recovery Methods' }
+      ]
+    },
+
+    {
+      id: '4.14',
+      title: 'Data Backup, Storage and Restoration',
+      children: [
+        { id: '4.14.1', title: 'Data Storage Resiliency and Disaster Recovery Methods' },
+        { id: '4.14.2', title: 'Backup and Restoration' },
+        { id: '4.14.3', title: 'Backup Schemes' }
+      ]
+    },
+
+    {
+      id: '4.15',
+      title: 'Business Continuity Plan',
+      children: [
+        { id: '4.15.1', title: 'IT Business Continuity Planning' },
+        { id: '4.15.2', title: 'Disasters and Other Disruptive Events' },
+        { id: '4.15.3', title: 'Business Continuity Planning Process' },
+        { id: '4.15.4', title: 'Business Continuity Policy' },
+        { id: '4.15.5', title: 'Business Continuity Planning Incident Management' },
+        { id: '4.15.6', title: 'Development of Business Continuity Plans' },
+        { id: '4.15.7', title: 'Other Issues in Plan Development' },
+        { id: '4.15.8', title: 'Components of a Business Continuity Plan' },
+        { id: '4.15.9', title: 'Plan Testing' },
+        { id: '4.15.10', title: 'Business Continuity Management Good Practices' },
+        { id: '4.15.11', title: 'Auditing Business Continuity' }
+      ]
+    },
+
+    {
+      id: '4.16',
+      title: 'Disaster Recovery Plans',
+      children: [
+        {
+          id: '4.16.1',
+          title: 'Recovery Point Objective, Recovery Time Objective and Mean Time to Repair'
+        },
+        { id: '4.16.2', title: 'Recovery Strategies' },
+        { id: '4.16.3', title: 'Recovery Alternatives' },
+        { id: '4.16.4', title: 'Development of Disaster Recovery Plans' },
+        { id: '4.16.5', title: 'Disaster Recovery Testing Methods' },
+        { id: '4.16.6', title: 'Invoking Disaster Recovery Plans' }
+      ]
+    }
   ]
 },
-];
 
 export default navigationData;
