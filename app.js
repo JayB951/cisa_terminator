@@ -1,237 +1,78 @@
-// ======================================
+// =====================================
 // CISA TERMINATOR
 // APP.JS
-// ======================================
+// =====================================
 
-console.log("CISA TERMINATOR STARTED");
+console.log("CISA Terminator started");
 
-// ======================================
-// GLOBALS
-// ======================================
-
-let pdfBaseUrl = "";
-
-// ======================================
-// CISA NAVIGATION
-// ======================================
-
-const navigation = {
-
-    "Domain 1 - Information System Auditing Process": [
-
-        { title: "1.1 IS Audit Standards", page: 31 },
-        { title: "1.2 Types of Audits", page: 34 },
-        { title: "1.3 Risk-Based Audit Planning", page: 38 },
-        { title: "1.4 Types of Controls", page: 43 },
-        { title: "1.5 Audit Project Management", page: 53 },
-        { title: "1.6 Audit Testing and Sampling", page: 60 },
-        { title: "1.7 Audit Evidence Collection", page: 63 },
-        { title: "1.8 Audit Data Analytics", page: 66 },
-        { title: "1.9 Reporting and Communication", page: 73 },
-        { title: "1.10 Quality Assurance", page: 79 }
-
-    ],
-
-    "Domain 2 - Governance and Management of IT": [],
-
-    "Domain 3 - Information Systems Acquisition, Development and Implementation": [],
-
-    "Domain 4 - Information Systems Operations and Business Resilience": [],
-
-    "Domain 5 - Protection of Information Assets": []
-
-};
-
-// ======================================
+// =====================================
 // INIT
-// ======================================
+// =====================================
 
 window.addEventListener("load", () => {
 
+    console.log("Page loaded");
+
+    initTabs();
+    initNotes();
     renderNavigation();
-
-    loadSavedPdf();
-
-    loadNotes();
 
 });
 
-// ======================================
-// PDF FUNCTIONS
-// ======================================
+// =====================================
+// TAB SYSTEM
+// =====================================
 
-function loadPdf() {
+function initTabs() {
 
-    const input =
-        document.getElementById("driveLink");
+    const buttons =
+        document.querySelectorAll(".tab-btn");
 
-    const url =
-        input.value.trim();
+    buttons.forEach(btn => {
 
-    if (!url) {
+        btn.addEventListener("click", () => {
 
-        alert("Adj meg egy Google Drive linket.");
+            const target =
+                btn.dataset.tab;
 
-        return;
-    }
-
-    const match =
-        url.match(/\/d\/([^\/]+)/);
-
-    if (!match) {
-
-        alert("Nem sikerült kinyerni a Google Drive File ID-t.");
-
-        return;
-    }
-
-    const fileId =
-        match[1];
-
-    pdfBaseUrl =
-        `https://drive.google.com/file/d/${fileId}/preview`;
-
-    localStorage.setItem(
-        "cisa_pdf_url",
-        pdfBaseUrl
-    );
-
-    document
-        .getElementById("pdfViewer")
-        .src =
-        pdfBaseUrl;
-}
-
-function loadSavedPdf() {
-
-    const saved =
-        localStorage.getItem(
-            "cisa_pdf_url"
-        );
-
-    if (!saved)
-        return;
-
-    pdfBaseUrl = saved;
-
-    document
-        .getElementById("pdfViewer")
-        .src =
-        pdfBaseUrl;
-}
-
-// ======================================
-// NAVIGATION
-// ======================================
-
-function renderNavigation() {
-
-    const nav =
-        document.getElementById(
-            "navigation"
-        );
-
-    if (!nav)
-        return;
-
-    nav.innerHTML = "";
-
-    Object.keys(navigation)
-        .forEach(domain => {
-
-            const domainDiv =
-                document.createElement(
-                    "div"
+            document
+                .querySelectorAll(".tab-btn")
+                .forEach(b =>
+                    b.classList.remove("active")
                 );
 
-            domainDiv.className =
-                "domain";
-
-            domainDiv.textContent =
-                domain;
-
-            nav.appendChild(
-                domainDiv
-            );
-
-            navigation[domain]
-                .forEach(item => {
-
-                const topicDiv =
-                    document.createElement(
-                        "div"
-                    );
-
-                topicDiv.className =
-                    "topic";
-
-                topicDiv.textContent =
-                    item.title;
-
-                topicDiv.onclick =
-                    () => {
-
-                    goToPage(
-                        item.page
-                    );
-
-                };
-
-                nav.appendChild(
-                    topicDiv
+            document
+                .querySelectorAll(".tab-content")
+                .forEach(tab =>
+                    tab.classList.remove("active")
                 );
 
-            });
+            btn.classList.add("active");
+
+            const tab =
+                document.getElementById(
+                    target
+                );
+
+            if (tab) {
+
+                tab.classList.add(
+                    "active"
+                );
+
+            }
 
         });
 
+    });
+
 }
 
-// ======================================
-// PAGE JUMP
-// ======================================
-
-function goToPage(page) {
-
-    if (!pdfBaseUrl) {
-
-        alert(
-            "Előbb töltsd be a Review PDF-et."
-        );
-
-        return;
-    }
-
-    const viewer =
-        document.getElementById(
-            "pdfViewer"
-        );
-
-    viewer.src =
-        `${pdfBaseUrl}#page=${page}`;
-}
-
-// ======================================
+// =====================================
 // NOTES
-// ======================================
+// =====================================
 
-function saveNotes() {
-
-    const notes =
-        document.getElementById(
-            "notes"
-        );
-
-    if (!notes)
-        return;
-
-    localStorage.setItem(
-        "cisa_notes",
-        notes.value
-    );
-}
-
-function loadNotes() {
+function initNotes() {
 
     const notes =
         document.getElementById(
@@ -241,59 +82,247 @@ function loadNotes() {
     if (!notes)
         return;
 
-    notes.value =
+    const saved =
         localStorage.getItem(
             "cisa_notes"
-        ) || "";
+        );
+
+    if (saved) {
+
+        notes.value = saved;
+
+    }
 
     notes.addEventListener(
         "input",
-        saveNotes
-    );
-}
+        () => {
 
-// ======================================
-// STUDY TOOLS PLACEHOLDERS
-// ======================================
+            localStorage.setItem(
+                "cisa_notes",
+                notes.value
+            );
 
-function showSummary() {
+            updateStats();
 
-    alert(
-        "Summary modul hamarosan."
+        }
     );
 
-}
-
-function showFlashcards() {
-
-    alert(
-        "Flashcards modul hamarosan."
-    );
+    updateStats();
 
 }
 
-function showCheatSheet() {
+// =====================================
+// STATS
+// =====================================
 
-    alert(
-        "Cheat Sheet modul hamarosan."
-    );
+function updateStats() {
+
+    const notes =
+        document.getElementById(
+            "notes"
+        );
+
+    const notesCount =
+        document.getElementById(
+            "notesCount"
+        );
+
+    if (
+        notes &&
+        notesCount
+    ) {
+
+        const count =
+            notes.value
+            .trim()
+            .length;
+
+        notesCount.textContent =
+            count;
+
+    }
 
 }
 
-function showLogicalMap() {
+// =====================================
+// HIGHLIGHTS
+// =====================================
 
-    alert(
-        "Logical Map modul hamarosan."
+function addHighlight(text) {
+
+    const highlights =
+        JSON.parse(
+            localStorage.getItem(
+                "cisa_highlights"
+            ) || "[]"
+        );
+
+    highlights.push(text);
+
+    localStorage.setItem(
+        "cisa_highlights",
+        JSON.stringify(
+            highlights
+        )
     );
+
+    renderHighlights();
 
 }
 
-// ======================================
-// DEBUG
-// ======================================
+function renderHighlights() {
 
-window.loadPdf = loadPdf;
-window.showSummary = showSummary;
-window.showFlashcards = showFlashcards;
-window.showCheatSheet = showCheatSheet;
-window.showLogicalMap = showLogicalMap;
+    const container =
+        document.getElementById(
+            "highlightsList"
+        );
+
+    if (!container)
+        return;
+
+    const highlights =
+        JSON.parse(
+            localStorage.getItem(
+                "cisa_highlights"
+            ) || "[]"
+        );
+
+    if (
+        highlights.length === 0
+    ) {
+
+        container.innerHTML =
+            "No highlights yet.";
+
+        return;
+
+    }
+
+    container.innerHTML = "";
+
+    highlights.forEach(item => {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className =
+            "flashcard";
+
+        div.textContent =
+            item;
+
+        container.appendChild(
+            div
+        );
+
+    });
+
+}
+
+// =====================================
+// FLASHCARDS
+// =====================================
+
+function renderFlashcards() {
+
+    const container =
+        document.getElementById(
+            "flashcardsList"
+        );
+
+    if (!container)
+        return;
+
+}
+
+// =====================================
+// CHEAT SHEETS
+// =====================================
+
+function renderCheatSheets() {
+
+    const area =
+        document.getElementById(
+            "cheatSheetArea"
+        );
+
+    if (!area)
+        return;
+
+}
+
+// =====================================
+// STUDY TIME
+// =====================================
+
+let sessionStart =
+    Date.now();
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        const elapsed =
+            Date.now() -
+            sessionStart;
+
+        const previous =
+            Number(
+                localStorage.getItem(
+                    "cisa_study_time"
+                ) || 0
+            );
+
+        localStorage.setItem(
+            "cisa_study_time",
+            previous +
+            elapsed
+        );
+
+    }
+);
+
+function renderStudyTime() {
+
+    const target =
+        document.getElementById(
+            "studyTime"
+        );
+
+    if (!target)
+        return;
+
+    const millis =
+        Number(
+            localStorage.getItem(
+                "cisa_study_time"
+            ) || 0
+        );
+
+    const minutes =
+        Math.floor(
+            millis / 60000
+        );
+
+    target.textContent =
+        minutes + " min";
+
+}
+
+// =====================================
+// STARTUP
+// =====================================
+
+window.addEventListener(
+    "load",
+    () => {
+
+        renderHighlights();
+        renderFlashcards();
+        renderCheatSheets();
+        renderStudyTime();
+
+    }
+);
