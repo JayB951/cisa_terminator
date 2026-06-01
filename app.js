@@ -1,77 +1,55 @@
-let reviewData = [];
-let domainConfig = {};
-let activeContext = null;
-let db = null;
+// ===============================
+// DOMAIN-ALAPÚ CISA TERMINATOR
+// ===============================
 
-/* ============================
-   INIT DB
-============================ */
-function initDB() {
-    const req = indexedDB.open("cisa-terminator", 2);
+// Globális domain struktúra
+let domainData = {};      // { "Domain 1": { fullText:"...", topics:[...] } }
+let activeDomain = null;  // éppen kiválasztott domain
+let activeTopic = null;   // éppen kiválasztott topic
 
-    req.onupgradeneeded = e => {
-        db = e.target.result;
-        if (!db.objectStoreNames.contains("data"))
-            db.createObjectStore("data", { keyPath: "id" });
-    };
 
-    req.onsuccess = e => {
-        db = e.target.result;
-        loadSaved();
-    };
-}
+// ===============================
+// SEGÉDFÜGGVÉNYEK
+// ===============================
 
-initDB();
-
-/* ============================
-   CLEAR DB
-============================ */
-function clearDB() {
-    if (!db) return;
-    const tx = db.transaction(["data"], "readwrite");
-    tx.objectStore("data").delete("active");
-
-    reviewData = [];
-    domainConfig = {};
-    activeContext = null;
-
-    document.getElementById("tree").innerHTML = "";
-    document.getElementById("contentTitle").textContent = "DB cleared";
-    document.getElementById("contentArea").innerHTML = "No data loaded.";
-}
-
-document.getElementById("clearBtn").onclick = clearDB;
-
-/* ============================
-   SAVE / LOAD
-============================ */
-function saveData() {
-    if (!db) return;
-    const tx = db.transaction(["data"], "readwrite");
-    tx.objectStore("data").put({
-        id: "active",
-        reviewData,
-        domainConfig
+// TXT fájl beolvasása
+function readFile(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsText(file);
     });
 }
 
-function loadSaved() {
-    const tx = db.transaction(["data"], "readonly");
-    const req = tx.objectStore("data").get("active");
+// Egyszerű topic‑felismerés: üres sorok alapján darabol
+function splitIntoTopics(text) {
+    const lines = text.split(/\r?\n/);
+    const topics = [];
+    let buffer = [];
 
-    req.onsuccess = () => {
-        if (req.result) {
-            reviewData = req.result.reviewData;
-            domainConfig = req.result.domainConfig;
-            renderTree();
+    for (let line of lines) {
+        if (line.trim() === "") {
+            if (buffer.length > 0) {
+                topics.push(buffer.join("\n"));
+                buffer = [];
+            }
+        } else {
+            buffer.push(line);
         }
-    };
+    }
+
+    if (buffer.length > 0) topics.push(buffer.join("\n"));
+
+    return topics;
 }
 
-/* ============================
-   LOAD DOMAIN FILES (5 TXT)
-============================ */
-async function loadDomainFiles() {
+
+// ===============================
+// DOMAIN IMPORT
+// ===============================
+
+document.getElementById("importBtn").onclick = async () => {
+
     const files = [
         document.getElementById("dom1").files[0],
         document.getElementById("dom2").files[0],
@@ -80,305 +58,125 @@ async function loadDomainFiles() {
         document.getElementById("dom5").files[0]
     ];
 
-    const names = [
-        "Domain 1",
-        "Domain 2",
-        "Domain 3",
-        "Domain 4",
-        "Domain 5"
-    ];
+    domainData = {}; // reset
 
-    const config = {};
-
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < files.length; i++) {
         if (!files[i]) continue;
 
-        const fullText = await files[i].text();
+        const txt = await readFile(files[i]);
+        const domainName = `Domain ${i + 1}`;
 
-        const words = fullText
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, "")
-            .split(/\s+/)
-            .filter(w => w.length > 5);
-
-        const freq = {};
-        words.forEach(w => freq[w] = (freq[w] || 0) + 1);
-
-        const keywords = Object.entries(freq)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 25)
-            .map(x => x[0]);
-
-        const firstSentence = fullText.split(/[.!?]/)[0].trim();
-
-        config[names[i]] = {
-            keywords,
-            definition: firstSentence,
-            fullText
+        domainData[domainName] = {
+            fullText: txt,
+            topics: splitIntoTopics(txt)
         };
     }
 
-    return config;
-}
-
-/* ============================
-   IMPORT BUTTON
-============================ */
-document.getElementById("importBtn").onclick = async () => {
-    const reviewFile = document.getElementById("reviewFile").files[0];
-    if (!reviewFile) return;
-
-    const reviewText = await reviewFile.text();
-    reviewData = parseReview(reviewText);
-
-    domainConfig = await loadDomainFiles();
-
-    assignDomains(reviewData, domainConfig);
-    saveData();
-    renderTree();
+    buildTree();
+    document.getElementById("contentTitle").innerText = "Domains Loaded";
+    document.getElementById("contentArea").innerText = "Válassz egy domaint a bal oldalon.";
 };
 
-/* ============================
-   PARSER (stabil)
-============================ */
-function parseReview(text) {
-    const chapters = [];
-    const lines = text.split(/\r?\n/);
 
-    let chapter = null;
-    let section = null;
+// ===============================
+// DOMAIN TREE FELÉPÍTÉSE
+// ===============================
 
-    for (let raw of lines) {
-        const line = raw.trim();
-        if (!line) continue;
-
-        if (/^Chapter\s+\d+/i.test(line)) {
-            chapter = { id: line.match(/\d+/)[0], sections: [], rawContent: "" };
-            chapters.push(chapter);
-            section = null;
-            continue;
-        }
-
-        if (!chapter) continue;
-
-        chapter.rawContent += raw + "\n";
-
-        const m = line.match(/^(\d+\.\d+)\s+(.+)/);
-        if (m) {
-            section = { id: m[1], title: m[2], content: "", domain: null };
-            chapter.sections.push(section);
-            continue;
-        }
-
-        if (section) section.content += raw + "\n";
-    }
-
-    return chapters;
-}
-
-/* ============================
-   DOMAIN ASSIGNMENT
-============================ */
-function assignDomains(chapters, config) {
-    chapters.forEach(ch => {
-        ch.sections.forEach(sec => {
-            const text = (sec.title + " " + sec.content).toLowerCase();
-
-            let bestDomain = "Uncategorized";
-            let bestScore = 0;
-
-            for (const dom in config) {
-                const keys = config[dom].keywords;
-                let score = 0;
-
-                keys.forEach(k => {
-                    if (text.includes(k)) score++;
-                });
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestDomain = dom;
-                }
-            }
-
-            sec.domain = bestDomain;
-        });
-    });
-}
-
-/* ============================
-   UI TREE
-============================ */
-function setActiveContext(x) { activeContext = x; }
-
-function escapeHtml(t) {
-    return t.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
-
-function renderTree() {
+function buildTree() {
     const tree = document.getElementById("tree");
     tree.innerHTML = "";
 
-    reviewData.forEach(ch => {
-        const c = document.createElement("div");
-        c.className = "chapter";
-        c.textContent = "Chapter " + ch.id;
-        c.onclick = () => showChapter(ch);
-        tree.appendChild(c);
+    Object.keys(domainData).forEach(domainName => {
+        const d = document.createElement("div");
+        d.className = "domain";
+        d.innerText = domainName;
 
-        const groups = {};
-        ch.sections.forEach(s => {
-            if (!groups[s.domain]) groups[s.domain] = [];
-            groups[s.domain].push(s);
+        d.onclick = () => showDomain(domainName);
+
+        tree.appendChild(d);
+
+        // topicok listázása
+        domainData[domainName].topics.forEach((t, idx) => {
+            const topicDiv = document.createElement("div");
+            topicDiv.className = "topic";
+            topicDiv.innerText = `Topic ${idx + 1}`;
+
+            topicDiv.onclick = (e) => {
+                e.stopPropagation();
+                showTopic(domainName, idx);
+            };
+
+            tree.appendChild(topicDiv);
         });
-
-        for (const dom in groups) {
-            const d = document.createElement("div");
-            d.textContent = "📁 " + dom;
-            d.style.marginLeft = "10px";
-            d.style.fontWeight = "bold";
-            d.onclick = () => showDomain(ch, dom);
-            tree.appendChild(d);
-
-            groups[dom].forEach(sec => {
-                const s = document.createElement("div");
-                s.className = "section";
-                s.textContent = sec.id + " " + sec.title;
-                s.onclick = e => { e.stopPropagation(); showSection(sec); };
-                tree.appendChild(s);
-            });
-        }
     });
 }
 
-/* ============================
-   VIEW HANDLERS
-============================ */
-function showChapter(ch) {
-    setActiveContext(ch);
-    document.getElementById("contentTitle").textContent = "Chapter " + ch.id;
+
+// ===============================
+// DOMAIN MEGJELENÍTÉSE
+// ===============================
+
+function showDomain(domainName) {
+    activeDomain = domainName;
+    activeTopic = null;
+
+    document.getElementById("contentTitle").innerText = domainName;
     document.getElementById("contentArea").innerHTML =
-        "<pre>" + escapeHtml(ch.rawContent) + "</pre>";
+        `<pre>${escapeHtml(domainData[domainName].fullText)}</pre>`;
 }
 
-function showDomain(ch, dom) {
-    const secs = ch.sections.filter(s => s.domain === dom);
 
-    const ctx = {
-        type: "domain",
-        name: dom,
-        sections: secs,
-        content: secs.map(s => s.content).join("\n")
-    };
+// ===============================
+// TOPIC MEGJELENÍTÉSE
+// ===============================
 
-    setActiveContext(ctx);
+function showTopic(domainName, topicIndex) {
+    activeDomain = domainName;
+    activeTopic = topicIndex;
 
-    let html = "";
-    secs.forEach(s => {
-        html += "<b>" + s.id + " " + s.title + "</b><br>";
-        html += "<pre>" + escapeHtml(s.content) + "</pre><hr>";
-    });
+    const topicText = domainData[domainName].topics[topicIndex];
 
-    document.getElementById("contentTitle").textContent = dom;
-    document.getElementById("contentArea").innerHTML = html;
-}
-
-function showSection(sec) {
-    setActiveContext(sec);
-    document.getElementById("contentTitle").textContent = sec.id + " " + sec.title;
-    document.getElementById("contentArea").innerHTML =
-        "<pre>" + escapeHtml(sec.content) + "</pre>";
-}
-
-/* ============================
-   DEFINITIONS
-============================ */
-function extractDefinitions(ctx) {
-    const defs = [];
-
-    if (ctx.name && domainConfig[ctx.name]) {
-        defs.push({
-            term: ctx.name,
-            definition: domainConfig[ctx.name].definition
-        });
-    }
-
-    const text = ctx.content || ctx.rawContent || "";
-    const lines = text.split(/\r?\n/);
-
-    lines.forEach(line => {
-        const m = line.match(/^([A-Za-z][A-Za-z0-9 _-]{2,})\s*[:\-–=]\s*(.+)$/);
-        if (m) defs.push({ term: m[1], definition: m[2] });
-    });
-
-    return defs;
-}
-
-/* ============================
-   STUDY TOOLS
-============================ */
-function showSummary() {
-    const ctx = activeContext;
-    if (!ctx) return;
-
-    const secs = ctx.sections || [ctx];
-    let text = "";
-
-    secs.forEach(s => text += s.id + " " + s.title + "\n");
+    document.getElementById("contentTitle").innerText =
+        `${domainName} – Topic ${topicIndex + 1}`;
 
     document.getElementById("contentArea").innerHTML =
-        "<pre>" + escapeHtml(text) + "</pre>";
+        `<pre>${escapeHtml(topicText)}</pre>`;
 }
 
-function showFlashcards() {
-    const ctx = activeContext;
-    if (!ctx) return;
 
-    const secs = ctx.sections || [ctx];
-    let html = "";
+// ===============================
+// HTML ESCAPE
+// ===============================
 
-    secs.forEach(s => {
-        const first = s.content.split("\n")[0] || "";
-        html += `<div class="card"><b>${s.id} ${s.title}</b><br>${first}</div>`;
-    });
-
-    document.getElementById("contentArea").innerHTML = html;
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
-function showKeyTerms() {
-    const ctx = activeContext;
-    if (!ctx) return;
 
-    const defs = extractDefinitions(ctx);
-    let html = "";
+// ===============================
+// CLEAR
+// ===============================
 
-    defs.forEach(d => html += `<b>${d.term}</b>: ${d.definition}<br><br>`);
+document.getElementById("clearBtn").onclick = () => {
+    domainData = {};
+    activeDomain = null;
+    activeTopic = null;
 
-    document.getElementById("contentArea").innerHTML = html;
-}
+    document.getElementById("tree").innerHTML = "";
+    document.getElementById("contentTitle").innerText = "Cleared";
+    document.getElementById("contentArea").innerText = "Importáld újra a domaineket.";
+};
 
-function showCheatSheet() {
-    const ctx = activeContext;
-    if (!ctx) return;
 
-    const secs = ctx.sections || [ctx];
-    let text = "";
+// ===============================
+// STUDY TOOLS HELYEK (külön generálom)
+// ===============================
 
-    secs.forEach(s => text += `- ${s.id}: ${s.title}\n`);
-
-    document.getElementById("contentArea").innerHTML =
-        "<pre>" + escapeHtml(text) + "</pre>";
-}
-
-function showLogicalMap() {
-    const ctx = activeContext;
-    if (!ctx) return;
-
-    const secs = ctx.sections || [ctx];
-    let text = "";
-
-    secs.forEach(s => text += `• ${s.id} ${s.title}\n`);
-
-    document.getElementById("contentArea").innerHTML =
-        "<pre>" + escapeHtml(text) + "</pre>";
-}
+function showSummary() {}
+function showFlashcards() {}
+function showKeyTerms() {}
+function showCheatSheet() {}
+function showLogicalMap() {}
