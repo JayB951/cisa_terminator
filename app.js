@@ -1,3 +1,4 @@
+let reviewStructure = [];
 const uploadBtn = document.getElementById("uploadBtn");
 const pdfUpload = document.getElementById("pdfUpload");
 const documentList = document.getElementById("documentList");
