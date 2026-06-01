@@ -7,7 +7,7 @@ let db = null;
    INIT DB
 ============================ */
 function initDB() {
-    const req = indexedDB.open("cisa-terminator", 1);
+    const req = indexedDB.open("cisa-terminator", 2);
 
     req.onupgradeneeded = e => {
         db = e.target.result;
