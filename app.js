@@ -1,14 +1,15 @@
-let reviewData = [];
-let db;
+// ============================
+// CISA TERMINATOR - APP.JS
+// ============================
 
-const importBtn = document.getElementById("importBtn");
-const txtFile = document.getElementById("txtFile");
-const tree = document.getElementById("tree");
-const contentTitle = document.getElementById("contentTitle");
-const contentArea = document.getElementById("contentArea");
-const clearBtn = document.getElementById("clearBtn");
+let reviewData = [];        // Chapters + Sections
+let domainConfig = {};      // Feltöltött domains.json
+let activeContext = null;   // chapter / domain / section
+let db = null;
 
+// ============================
 // INIT DB
+// ============================
 function initDB() {
     const request = indexedDB.open("cisa-terminator", 1);
 
@@ -31,40 +32,46 @@ function initDB() {
 
 initDB();
 
+// ============================
 // CLEAR DB
+// ============================
 function clearDB() {
     if (!db) return;
     const tx = db.transaction(["studyFiles"], "readwrite");
     const store = tx.objectStore("studyFiles");
     store.delete("active");
+
     reviewData = [];
-    tree.innerHTML = "";
-    contentTitle.textContent = "DB cleared";
-    contentArea.innerHTML = "No data loaded.";
+    domainConfig = {};
+    activeContext = null;
+
+    document.getElementById("tree").innerHTML = "";
+    document.getElementById("contentTitle").textContent = "DB cleared";
+    document.getElementById("contentArea").innerHTML = "No data loaded.";
 }
 
-if (clearBtn) {
-    clearBtn.addEventListener("click", clearDB);
-}
+document.getElementById("clearBtn").addEventListener("click", clearDB);
 
-// SAVE
-function saveStudyData(data, fileName) {
+// ============================
+// SAVE TO DB
+// ============================
+function saveStudyData() {
     if (!db) return;
-
-    const safeData = JSON.parse(JSON.stringify(data));
 
     const tx = db.transaction(["studyFiles"], "readwrite");
     const store = tx.objectStore("studyFiles");
 
     store.put({
         id: "active",
-        fileName,
-        importedAt: new Date().toISOString(),
-        data: safeData
+        reviewData,
+        domainConfig,
+        savedAt: new Date().toISOString()
     });
 }
 
-// LOAD
+// ============================
+// LOAD FROM DB
+// ============================
 function loadSavedFile() {
     const tx = db.transaction(["studyFiles"], "readonly");
     const store = tx.objectStore("studyFiles");
@@ -73,25 +80,49 @@ function loadSavedFile() {
 
     req.onsuccess = () => {
         if (req.result) {
-            reviewData = req.result.data;
+            reviewData = req.result.reviewData || [];
+            domainConfig = req.result.domainConfig || {};
             renderTree();
         }
     };
 }
 
-// IMPORT
+// ============================
+// FILE UPLOAD HANDLING
+// ============================
+const txtFile = document.getElementById("txtFile");
+const domainFile = document.getElementById("domainFile");
+const importBtn = document.getElementById("importBtn");
+
 importBtn.addEventListener("click", async () => {
-    const file = txtFile.files[0];
-    if (!file) return;
+    const txt = txtFile.files[0];
+    const dom = domainFile.files[0];
 
-    const text = await file.text();
-    reviewData = parseReview(text);
+    if (!txt) {
+        alert("Töltsd fel a Review TXT-t!");
+        return;
+    }
 
+    if (!dom) {
+        alert("Töltsd fel a Domains JSON-t!");
+        return;
+    }
+
+    const reviewText = await txt.text();
+    const domainText = await dom.text();
+
+    domainConfig = JSON.parse(domainText);
+
+    reviewData = parseReview(reviewText);
+    assignDomains(reviewData, domainConfig);
+
+    saveStudyData();
     renderTree();
-    saveStudyData(reviewData, file.name);
 });
 
-// PARSER (duplikáció fix)
+// ============================
+// PARSER (stabil, domain-független)
+// ============================
 function parseReview(text) {
     const chapters = [];
     const lines = text.split(/\r?\n/);
@@ -99,93 +130,91 @@ function parseReview(text) {
     let currentChapter = null;
     let currentSection = null;
 
-    for (let line of lines) {
-        line = line.trim();
+    for (let rawLine of lines) {
+        const line = rawLine.trim();
         if (!line) continue;
 
         // CHAPTER
         if (/^Chapter\s+\d+/i.test(line)) {
             const num = line.match(/\d+/)[0];
 
-            // ha már létezik ilyen chapter, azt folytatjuk
-            let existing = chapters.find(c => c.id === num);
-            if (existing) {
-                currentChapter = existing;
-            } else {
-                currentChapter = {
-                    id: num,
-                    title: "",
-                    domains: [],
-                    rawContent: ""
-                };
-                chapters.push(currentChapter);
-            }
+            currentChapter = {
+                id: num,
+                sections: [],
+                rawContent: ""
+            };
 
+            chapters.push(currentChapter);
             currentSection = null;
             continue;
         }
 
         if (!currentChapter) continue;
 
-        currentChapter.rawContent += line + "\n";
+        currentChapter.rawContent += rawLine + "\n";
 
-        // SECTION detection
-        const sectionMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
-        const isValidSection =
-            sectionMatch &&
-            sectionMatch[2].length > 2 &&
-            sectionMatch[2].length < 120 &&
-            /[A-Za-z]/.test(sectionMatch[2]);
-
-        if (isValidSection) {
+        // SECTION
+        const secMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
+        if (secMatch) {
             currentSection = {
-                id: sectionMatch[1],
-                title: sectionMatch[2],
-                content: ""
+                id: secMatch[1],
+                title: secMatch[2],
+                content: "",
+                domain: null
             };
 
-            let domain = detectDomain(line);
-            let domainObj = currentChapter.domains.find(d => d.name === domain);
-
-            if (!domainObj) {
-                domainObj = { name: domain, sections: [] };
-                currentChapter.domains.push(domainObj);
-            }
-
-            domainObj.sections.push(currentSection);
+            currentChapter.sections.push(currentSection);
             continue;
         }
 
         if (currentSection) {
-            currentSection.content += line + "\n";
+            currentSection.content += rawLine + "\n";
         }
     }
 
     return chapters;
 }
 
-// DOMAIN DETECTION
-function detectDomain(text) {
-    const rules = [
-        { name: "Governance", keywords: ["policy", "governance", "framework", "compliance"] },
-        { name: "Risk", keywords: ["risk", "threat", "vulnerability", "impact"] },
-        { name: "Audit", keywords: ["audit", "control", "evidence", "test"] },
-        { name: "Security Ops", keywords: ["incident", "response", "monitoring"] }
-    ];
+// ============================
+// DOMAIN ASSIGNMENT
+// ============================
+function assignDomains(chapters, domainConfig) {
+    chapters.forEach(ch => {
+        ch.sections.forEach(sec => {
+            const text = (sec.title + " " + sec.content).toLowerCase();
 
-    const t = text.toLowerCase();
+            for (const domainName in domainConfig) {
+                const keywords = domainConfig[domainName].keywords || [];
 
-    for (const r of rules) {
-        for (const k of r.keywords) {
-            if (t.includes(k)) return r.name;
-        }
-    }
+                if (keywords.some(k => text.includes(k.toLowerCase()))) {
+                    sec.domain = domainName;
+                    break;
+                }
+            }
 
-    return "General";
+            if (!sec.domain) {
+                sec.domain = "Uncategorized";
+            }
+        });
+    });
 }
 
-// RENDER TREE
+// ============================
+// CONTEXT HANDLING
+// ============================
+function setActiveContext(obj) {
+    activeContext = obj;
+}
+
+function getActiveContext() {
+    return activeContext;
+}
+
+// ============================
+// UI: TREE RENDER
+// ============================
 function renderTree() {
+    const tree = document.getElementById("tree");
     tree.innerHTML = "";
 
     reviewData.forEach(ch => {
@@ -195,40 +224,85 @@ function renderTree() {
         c.onclick = () => showChapter(ch);
         tree.appendChild(c);
 
-        ch.domains.forEach(d => {
+        // domain grouping
+        const domains = {};
+
+        ch.sections.forEach(sec => {
+            if (!domains[sec.domain]) domains[sec.domain] = [];
+            domains[sec.domain].push(sec);
+        });
+
+        for (const domName in domains) {
             const dom = document.createElement("div");
-            dom.textContent = "📁 " + d.name;
+            dom.textContent = "📁 " + domName;
             dom.style.marginLeft = "10px";
             dom.style.fontWeight = "bold";
+            dom.onclick = () => showDomain(ch, domName);
             tree.appendChild(dom);
 
-            d.sections.forEach(s => {
-                const sec = document.createElement("div");
-                sec.className = "section";
-                sec.textContent = `${s.id} ${s.title}`;
-                sec.onclick = (e) => {
+            domains[domName].forEach(sec => {
+                const secDiv = document.createElement("div");
+                secDiv.className = "section";
+                secDiv.textContent = `${sec.id} ${sec.title}`;
+                secDiv.onclick = (e) => {
                     e.stopPropagation();
-                    showSection(s);
+                    showSection(sec);
                 };
-                tree.appendChild(sec);
+                tree.appendChild(secDiv);
             });
-        });
+        }
     });
 }
 
-// VIEW CHAPTER
+// ============================
+// VIEW: CHAPTER
+// ============================
 function showChapter(ch) {
-    contentTitle.textContent = `Chapter ${ch.id}`;
-    contentArea.innerHTML = `<pre>${escapeHtml(ch.rawContent)}</pre>`;
+    setActiveContext(ch);
+    document.getElementById("contentTitle").textContent = `Chapter ${ch.id}`;
+    document.getElementById("contentArea").innerHTML =
+        `<pre>${escapeHtml(ch.rawContent)}</pre>`;
 }
 
-// VIEW SECTION
-function showSection(s) {
-    contentTitle.textContent = `${s.id} ${s.title}`;
-    contentArea.innerHTML = `<pre>${escapeHtml(s.content)}</pre>`;
+// ============================
+// VIEW: DOMAIN
+// ============================
+function showDomain(chapter, domainName) {
+    const domainSections = chapter.sections.filter(s => s.domain === domainName);
+
+    const ctx = {
+        type: "domain",
+        name: domainName,
+        sections: domainSections,
+        content: domainSections.map(s => s.content).join("\n")
+    };
+
+    setActiveContext(ctx);
+
+    document.getElementById("contentTitle").textContent = domainName;
+
+    let html = "";
+    domainSections.forEach(sec => {
+        html += `<b>${sec.id} ${sec.title}</b><br>`;
+        html += `<pre>${escapeHtml(sec.content)}</pre><hr>`;
+    });
+
+    document.getElementById("contentArea").innerHTML = html;
 }
 
+// ============================
+// VIEW: SECTION
+// ============================
+function showSection(sec) {
+    setActiveContext(sec);
+    document.getElementById("contentTitle").textContent = `${sec.id} ${sec.title}`;
+    document.getElementById("contentArea").innerHTML =
+        `<pre>${escapeHtml(sec.content)}</pre>`;
+}
+
+// ============================
 // ESCAPE HTML
+// ============================
 function escapeHtml(text) {
     return text
         .replaceAll("&", "&amp;")
@@ -236,111 +310,135 @@ function escapeHtml(text) {
         .replaceAll(">", "&gt;");
 }
 
+// ============================
+// DEFINITION EXTRACTOR
+// ============================
+function extractDefinitions(ctx) {
+    const defs = [];
+
+    // domain definíció
+    if (ctx.domain && domainConfig[ctx.domain]) {
+        defs.push({
+            term: ctx.domain,
+            definition: domainConfig[ctx.domain].definition || ""
+        });
+    }
+
+    const text = ctx.content || ctx.rawContent || "";
+    const lines = text.split(/\r?\n/);
+
+    for (let line of lines) {
+        const m = line.match(/^([A-Za-z][A-Za-z0-9 _-]{2,})\s*[:\-–=]\s*(.+)$/);
+        if (m) {
+            defs.push({
+                term: m[1].trim(),
+                definition: m[2].trim()
+            });
+        }
+    }
+
+    return defs;
+}
+
+// ============================
 // STUDY TOOLS
-function generateSummary(chapter) {
-    let summary = `Summary of Chapter ${chapter.id}\n\n`;
-    chapter.domains.forEach(domain => {
-        summary += `== ${domain.name} ==\n`;
-        domain.sections.forEach(sec => {
-            summary += `• ${sec.id} ${sec.title}\n`;
-        });
-        summary += "\n";
-    });
-    return summary;
-}
+// =================
+function extractDefinitions(ctx) {
+    const defs = [];
 
-function generateFlashcards(chapter) {
-    const cards = [];
-    chapter.domains.forEach(domain => {
-        domain.sections.forEach(sec => {
-            cards.push({
-                front: `${sec.id} ${sec.title}`,
-                back: sec.content.split("\n")[0] || "No content"
+    if (ctx.domain && domainConfig[ctx.domain]) {
+        defs.push({
+            term: ctx.domain,
+            definition: domainConfig[ctx.domain].definition || ""
+        });
+    }
+
+    const text = ctx.content || ctx.rawContent || "";
+    const lines = text.split(/\r?\n/);
+
+    for (let line of lines) {
+        const m = line.match(/^([A-Za-z][A-Za-z0-9 _-]{2,})\s*[:\-–=]\s*(.+)$/);
+        if (m) {
+            defs.push({
+                term: m[1].trim(),
+                definition: m[2].trim()
             });
-        });
-    });
-    return cards;
-}
+        }
+    }
 
-function generateKeyTerms(chapter) {
-    const terms = new Set();
-    chapter.domains.forEach(domain => {
-        domain.sections.forEach(sec => {
-            const words = sec.content.split(/\W+/);
-            words.forEach(w => {
-                if (w.length > 4) terms.add(w.toLowerCase());
-            });
-        });
-    });
-    return Array.from(terms).slice(0, 50);
-}
-
-function generateCheatSheet(chapter) {
-    let sheet = `Cheat Sheet – Chapter ${chapter.id}\n\n`;
-    chapter.domains.forEach(domain => {
-        sheet += `## ${domain.name}\n`;
-        domain.sections.forEach(sec => {
-            sheet += `- ${sec.id}: ${sec.title}\n`;
-        });
-        sheet += "\n";
-    });
-    return sheet;
-}
-
-function generateLogicalMap(chapter) {
-    let map = `Logical Map – Chapter ${chapter.id}\n\n`;
-    chapter.domains.forEach(domain => {
-        map += `${domain.name}\n`;
-        domain.sections.forEach(sec => {
-            map += `   └─ ${sec.id} ${sec.title}\n`;
-        });
-        map += "\n";
-    });
-    return map;
-}
-
-// STUDY TOOL UI
-function getActiveChapter() {
-    return reviewData[0] || null;
+    return defs;
 }
 
 function showSummary() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Summary";
-    contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
+    const ctx = activeContext;
+    if (!ctx) return;
+
+    let text = "";
+    const sections = ctx.sections || [ctx];
+
+    sections.forEach(sec => {
+        text += `${sec.id} ${sec.title}\n`;
+    });
+
+    document.getElementById("contentArea").innerHTML =
+        `<pre>${escapeHtml(text)}</pre>`;
 }
 
 function showFlashcards() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    const cards = generateFlashcards(ch);
+    const ctx = activeContext;
+    if (!ctx) return;
+
     let html = "";
-    cards.forEach(c => {
-        html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
+    const sections = ctx.sections || [ctx];
+
+    sections.forEach(sec => {
+        const firstLine = sec.content.split("\n")[0] || "";
+        html += `<div class="card"><b>${sec.id} ${sec.title}</b><br>${firstLine}</div>`;
     });
-    contentTitle.textContent = "Flashcards";
-    contentArea.innerHTML = html;
+
+    document.getElementById("contentArea").innerHTML = html;
 }
 
 function showKeyTerms() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    const terms = generateKeyTerms(ch);
-    contentTitle.textContent = "Key Terms";
-    contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
+    const ctx = activeContext;
+    if (!ctx) return;
+
+    const defs = extractDefinitions(ctx);
+    let html = "";
+
+    defs.forEach(d => {
+        html += `<b>${d.term}</b>: ${d.definition}<br><br>`;
+    });
+
+    document.getElementById("contentArea").innerHTML = html;
 }
 
 function showCheatSheet() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Cheat Sheet";
-    contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
+    const ctx = activeContext;
+    if (!ctx) return;
+
+    let text = "";
+    const sections = ctx.sections || [ctx];
+
+    sections.forEach(sec => {
+        text += `- ${sec.id}: ${sec.title}\n`;
+    });
+
+    document.getElementById("contentArea").innerHTML =
+        `<pre>${escapeHtml(text)}</pre>`;
 }
 
 function showLogicalMap() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Logical Map";
-    contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
+    const ctx = activeContext;
+    if (!ctx) return;
+
+    let text = "";
+    const sections = ctx.sections || [ctx];
+
+    sections.forEach(sec => {
+        text += `• ${sec.id} ${sec.title}\n`;
+    });
+
+    document.getElementById("contentArea").innerHTML =
+        `<pre>${escapeHtml(text)}</pre>`;
 }
