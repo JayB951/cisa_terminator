@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CISA Terminator</title>
+<title>CISA Terminator – Domain Mode</title>
 
 <style>
 body{
@@ -43,16 +43,20 @@ button{
     padding:10px 16px;
     cursor:pointer;
 }
-.chapter{
+.domain{
     margin-top:12px;
     font-weight:bold;
+    cursor:pointer;
 }
-.section{
+.domain:hover{
+    background:#eef;
+}
+.topic{
     margin-left:20px;
     cursor:pointer;
     padding:4px;
 }
-.section:hover{
+.topic:hover{
     background:#eef;
 }
 </style>
@@ -61,7 +65,7 @@ button{
 <body>
 
 <header>
-<h1>CISA Terminator</h1>
+<h1>CISA Terminator – Domain Mode</h1>
 </header>
 
 <div class="container">
@@ -69,12 +73,7 @@ button{
 <div class="sidebar">
 
 <div class="card">
-<h3>Review Import</h3>
-
-<label>Review TXT:</label><br>
-<input type="file" id="reviewFile" accept=".txt"><br><br>
-
-<h3>Domains (5 TXT)</h3>
+<h3>Domain Import</h3>
 
 <label>Domain 1:</label><br>
 <input type="file" id="dom1" accept=".txt"><br><br>
@@ -91,13 +90,13 @@ button{
 <label>Domain 5:</label><br>
 <input type="file" id="dom5" accept=".txt"><br><br>
 
-<button id="importBtn">Import</button><br><br>
+<button id="importBtn">Import Domains</button><br><br>
 
-<button id="clearBtn" style="background:#c62828;color:white;">Clear DB</button>
+<button id="clearBtn" style="background:#c62828;color:white;">Clear</button>
 </div>
 
 <div class="card">
-<h3>Knowledge Tree</h3>
+<h3>Domains</h3>
 <div id="tree"></div>
 </div>
 
@@ -114,7 +113,7 @@ button{
 
 <div class="content">
 <h2 id="contentTitle">Welcome</h2>
-<div id="contentArea">Importáld a Review TXT-t és az 5 Domain TXT-t.</div>
+<div id="contentArea">Importáld az 5 domain TXT-t.</div>
 </div>
 
 </div>
@@ -123,4 +122,3 @@ button{
 
 </body>
 </html>
-
