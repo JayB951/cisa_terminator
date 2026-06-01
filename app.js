@@ -1,182 +1,299 @@
-// ===============================
-// DOMAIN-ALAPÚ CISA TERMINATOR
-// ===============================
+// ======================================
+// CISA TERMINATOR
+// APP.JS
+// ======================================
 
-// Globális domain struktúra
-let domainData = {};      // { "Domain 1": { fullText:"...", topics:[...] } }
-let activeDomain = null;  // éppen kiválasztott domain
-let activeTopic = null;   // éppen kiválasztott topic
+console.log("CISA TERMINATOR STARTED");
 
+// ======================================
+// GLOBALS
+// ======================================
 
-// ===============================
-// SEGÉDFÜGGVÉNYEK
-// ===============================
+let pdfBaseUrl = "";
 
-// TXT fájl beolvasása
-function readFile(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsText(file);
-    });
-}
+// ======================================
+// CISA NAVIGATION
+// ======================================
 
-// Egyszerű topic‑felismerés: üres sorok alapján darabol
-function splitIntoTopics(text) {
-    const lines = text.split(/\r?\n/);
-    const topics = [];
-    let buffer = [];
+const navigation = {
 
-    for (let line of lines) {
-        if (line.trim() === "") {
-            if (buffer.length > 0) {
-                topics.push(buffer.join("\n"));
-                buffer = [];
-            }
-        } else {
-            buffer.push(line);
-        }
-    }
+    "Domain 1 - Information System Auditing Process": [
 
-    if (buffer.length > 0) topics.push(buffer.join("\n"));
+        { title: "1.1 IS Audit Standards", page: 31 },
+        { title: "1.2 Types of Audits", page: 34 },
+        { title: "1.3 Risk-Based Audit Planning", page: 38 },
+        { title: "1.4 Types of Controls", page: 43 },
+        { title: "1.5 Audit Project Management", page: 53 },
+        { title: "1.6 Audit Testing and Sampling", page: 60 },
+        { title: "1.7 Audit Evidence Collection", page: 63 },
+        { title: "1.8 Audit Data Analytics", page: 66 },
+        { title: "1.9 Reporting and Communication", page: 73 },
+        { title: "1.10 Quality Assurance", page: 79 }
 
-    return topics;
-}
+    ],
 
+    "Domain 2 - Governance and Management of IT": [],
 
-// ===============================
-// DOMAIN IMPORT
-// ===============================
+    "Domain 3 - Information Systems Acquisition, Development and Implementation": [],
 
-document.getElementById("importBtn").onclick = async () => {
+    "Domain 4 - Information Systems Operations and Business Resilience": [],
 
-    const files = [
-        document.getElementById("dom1").files[0],
-        document.getElementById("dom2").files[0],
-        document.getElementById("dom3").files[0],
-        document.getElementById("dom4").files[0],
-        document.getElementById("dom5").files[0]
-    ];
+    "Domain 5 - Protection of Information Assets": []
 
-    domainData = {}; // reset
-
-    for (let i = 0; i < files.length; i++) {
-        if (!files[i]) continue;
-
-        const txt = await readFile(files[i]);
-        const domainName = `Domain ${i + 1}`;
-
-        domainData[domainName] = {
-            fullText: txt,
-            topics: splitIntoTopics(txt)
-        };
-    }
-
-    buildTree();
-    document.getElementById("contentTitle").innerText = "Domains Loaded";
-    document.getElementById("contentArea").innerText = "Válassz egy domaint a bal oldalon.";
 };
 
+// ======================================
+// INIT
+// ======================================
 
-// ===============================
-// DOMAIN TREE FELÉPÍTÉSE
-// ===============================
+window.addEventListener("load", () => {
 
-function buildTree() {
-    const tree = document.getElementById("tree");
-    tree.innerHTML = "";
+    renderNavigation();
 
-    Object.keys(domainData).forEach(domainName => {
-        const d = document.createElement("div");
-        d.className = "domain";
-        d.innerText = domainName;
+    loadSavedPdf();
 
-        d.onclick = () => showDomain(domainName);
+    loadNotes();
 
-        tree.appendChild(d);
+});
 
-        // topicok listázása
-        domainData[domainName].topics.forEach((t, idx) => {
-            const topicDiv = document.createElement("div");
-            topicDiv.className = "topic";
-            topicDiv.innerText = `Topic ${idx + 1}`;
+// ======================================
+// PDF FUNCTIONS
+// ======================================
 
-            topicDiv.onclick = (e) => {
-                e.stopPropagation();
-                showTopic(domainName, idx);
-            };
+function loadPdf() {
 
-            tree.appendChild(topicDiv);
+    const input =
+        document.getElementById("driveLink");
+
+    const url =
+        input.value.trim();
+
+    if (!url) {
+
+        alert("Adj meg egy Google Drive linket.");
+
+        return;
+    }
+
+    const match =
+        url.match(/\/d\/([^\/]+)/);
+
+    if (!match) {
+
+        alert("Nem sikerült kinyerni a Google Drive File ID-t.");
+
+        return;
+    }
+
+    const fileId =
+        match[1];
+
+    pdfBaseUrl =
+        `https://drive.google.com/file/d/${fileId}/preview`;
+
+    localStorage.setItem(
+        "cisa_pdf_url",
+        pdfBaseUrl
+    );
+
+    document
+        .getElementById("pdfViewer")
+        .src =
+        pdfBaseUrl;
+}
+
+function loadSavedPdf() {
+
+    const saved =
+        localStorage.getItem(
+            "cisa_pdf_url"
+        );
+
+    if (!saved)
+        return;
+
+    pdfBaseUrl = saved;
+
+    document
+        .getElementById("pdfViewer")
+        .src =
+        pdfBaseUrl;
+}
+
+// ======================================
+// NAVIGATION
+// ======================================
+
+function renderNavigation() {
+
+    const nav =
+        document.getElementById(
+            "navigation"
+        );
+
+    if (!nav)
+        return;
+
+    nav.innerHTML = "";
+
+    Object.keys(navigation)
+        .forEach(domain => {
+
+            const domainDiv =
+                document.createElement(
+                    "div"
+                );
+
+            domainDiv.className =
+                "domain";
+
+            domainDiv.textContent =
+                domain;
+
+            nav.appendChild(
+                domainDiv
+            );
+
+            navigation[domain]
+                .forEach(item => {
+
+                const topicDiv =
+                    document.createElement(
+                        "div"
+                    );
+
+                topicDiv.className =
+                    "topic";
+
+                topicDiv.textContent =
+                    item.title;
+
+                topicDiv.onclick =
+                    () => {
+
+                    goToPage(
+                        item.page
+                    );
+
+                };
+
+                nav.appendChild(
+                    topicDiv
+                );
+
+            });
+
         });
-    });
+
 }
 
+// ======================================
+// PAGE JUMP
+// ======================================
 
-// ===============================
-// DOMAIN MEGJELENÍTÉSE
-// ===============================
+function goToPage(page) {
 
-function showDomain(domainName) {
-    activeDomain = domainName;
-    activeTopic = null;
+    if (!pdfBaseUrl) {
 
-    document.getElementById("contentTitle").innerText = domainName;
-    document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(domainData[domainName].fullText)}</pre>`;
+        alert(
+            "Előbb töltsd be a Review PDF-et."
+        );
+
+        return;
+    }
+
+    const viewer =
+        document.getElementById(
+            "pdfViewer"
+        );
+
+    viewer.src =
+        `${pdfBaseUrl}#page=${page}`;
 }
 
+// ======================================
+// NOTES
+// ======================================
 
-// ===============================
-// TOPIC MEGJELENÍTÉSE
-// ===============================
+function saveNotes() {
 
-function showTopic(domainName, topicIndex) {
-    activeDomain = domainName;
-    activeTopic = topicIndex;
+    const notes =
+        document.getElementById(
+            "notes"
+        );
 
-    const topicText = domainData[domainName].topics[topicIndex];
+    if (!notes)
+        return;
 
-    document.getElementById("contentTitle").innerText =
-        `${domainName} – Topic ${topicIndex + 1}`;
-
-    document.getElementById("contentArea").innerHTML =
-        `<pre>${escapeHtml(topicText)}</pre>`;
+    localStorage.setItem(
+        "cisa_notes",
+        notes.value
+    );
 }
 
+function loadNotes() {
 
-// ===============================
-// HTML ESCAPE
-// ===============================
+    const notes =
+        document.getElementById(
+            "notes"
+        );
 
-function escapeHtml(text) {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    if (!notes)
+        return;
+
+    notes.value =
+        localStorage.getItem(
+            "cisa_notes"
+        ) || "";
+
+    notes.addEventListener(
+        "input",
+        saveNotes
+    );
 }
 
+// ======================================
+// STUDY TOOLS PLACEHOLDERS
+// ======================================
 
-// ===============================
-// CLEAR
-// ===============================
+function showSummary() {
 
-document.getElementById("clearBtn").onclick = () => {
-    domainData = {};
-    activeDomain = null;
-    activeTopic = null;
+    alert(
+        "Summary modul hamarosan."
+    );
 
-    document.getElementById("tree").innerHTML = "";
-    document.getElementById("contentTitle").innerText = "Cleared";
-    document.getElementById("contentArea").innerText = "Importáld újra a domaineket.";
-};
+}
 
+function showFlashcards() {
 
-// ===============================
-// STUDY TOOLS HELYEK (külön generálom)
-// ===============================
+    alert(
+        "Flashcards modul hamarosan."
+    );
 
-function showSummary() {}
-function showFlashcards() {}
-function showKeyTerms() {}
-function showCheatSheet() {}
-function showLogicalMap() {}
+}
+
+function showCheatSheet() {
+
+    alert(
+        "Cheat Sheet modul hamarosan."
+    );
+
+}
+
+function showLogicalMap() {
+
+    alert(
+        "Logical Map modul hamarosan."
+    );
+
+}
+
+// ======================================
+// DEBUG
+// ======================================
+
+window.loadPdf = loadPdf;
+window.showSummary = showSummary;
+window.showFlashcards = showFlashcards;
+window.showCheatSheet = showCheatSheet;
+window.showLogicalMap = showLogicalMap;
