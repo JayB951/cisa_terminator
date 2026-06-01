@@ -111,3 +111,30 @@ ${preview}
         </pre>
     `;
 }
+const txtUpload =
+    document.getElementById("txtUpload");
+
+const importTxtBtn =
+    document.getElementById("importTxtBtn");
+
+importTxtBtn?.addEventListener(
+    "click",
+    async () => {
+
+        const file =
+            txtUpload.files[0];
+
+        if (!file) {
+
+            alert("Choose TXT file.");
+
+            return;
+        }
+
+        const text =
+            await file.text();
+
+        parseReview(text);
+
+    }
+);
