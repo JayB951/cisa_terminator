@@ -1,62 +1,73 @@
 let reviewData = [];
 let db;
 
-// -------------------------
+// --------------------
 // UI ELEMENTS
-// -------------------------
+// --------------------
 const importBtn = document.getElementById("importBtn");
 const txtFile = document.getElementById("txtFile");
 const tree = document.getElementById("tree");
 const contentTitle = document.getElementById("contentTitle");
 const contentArea = document.getElementById("contentArea");
 
-// -------------------------
-// INIT DB (IndexedDB)
-// -------------------------
+// --------------------
+// INIT DB
+// --------------------
 function initDB() {
 
     const request = indexedDB.open("cisa-terminator", 1);
 
-    request.onupgradeneeded = function (e) {
-
+    request.onupgradeneeded = (e) => {
         db = e.target.result;
 
-        db.createObjectStore("studyFiles", {
-            keyPath: "id"
-        });
-
+        if (!db.objectStoreNames.contains("studyFiles")) {
+            db.createObjectStore("studyFiles", { keyPath: "id" });
+        }
     };
 
-    request.onsuccess = function (e) {
-
+    request.onsuccess = (e) => {
         db = e.target.result;
-
         loadSavedFile();
-
+        console.log("DB ready");
     };
 
+    request.onerror = (e) => {
+        console.error("DB error:", e);
+    };
 }
 
-// -------------------------
-// SAVE FULL DATA
-// -------------------------
+// --------------------
+// SAVE
+// --------------------
 function saveStudyData(data, fileName) {
+
+    if (!db) {
+        console.error("DB not ready");
+        return;
+    }
 
     const tx = db.transaction(["studyFiles"], "readwrite");
     const store = tx.objectStore("studyFiles");
 
-    store.put({
+    const req = store.put({
         id: "active",
         fileName,
         importedAt: new Date().toISOString(),
         data
     });
 
+    req.onsuccess = () => {
+        console.log("SAVE OK");
+    };
+
+    req.onerror = (e) => {
+        console.error("SAVE ERROR:", e);
+    };
 }
 
-// -------------------------
-// LOAD SAVED DATA
-// -------------------------
+// --------------------
+// LOAD
+// --------------------
 function loadSavedFile() {
 
     const tx = db.transaction(["studyFiles"], "readonly");
@@ -64,51 +75,42 @@ function loadSavedFile() {
 
     const req = store.get("active");
 
-    req.onsuccess = function () {
+    req.onsuccess = () => {
 
         if (req.result) {
-
             reviewData = req.result.data;
-
             renderTree();
-
-            console.log("Loaded:", req.result.fileName);
-
+            console.log("LOADED:", req.result.fileName);
         }
-
     };
-
 }
 
-// -------------------------
-// IMPORT FILE
-// -------------------------
+// --------------------
+// IMPORT
+// --------------------
 importBtn.addEventListener("click", async () => {
 
     const file = txtFile.files[0];
 
     if (!file) {
-        alert("Válassz ki egy TXT fájlt.");
+        alert("Válassz TXT fájlt");
         return;
     }
 
     const text = await file.text();
 
-    const parsed = parseReview(text);
-
-    reviewData = parsed;
+    reviewData = parseReview(text);
 
     renderTree();
 
-    saveStudyData(parsed, file.name);
+    saveStudyData(reviewData, file.name);
 
-    alert(`Import kész. ${parsed.length} chapter betöltve + mentve.`);
-
+    console.log("IMPORT DONE:", reviewData.length);
 });
 
-// -------------------------
-// PARSER (FULL CONTENT STORE)
-// -------------------------
+// --------------------
+// PARSER (STABLE VERSION)
+// --------------------
 function parseReview(text) {
 
     const chapters = [];
@@ -117,18 +119,19 @@ function parseReview(text) {
     let currentChapter = null;
     let currentSection = null;
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let line of lines) {
 
-        const line = lines[i].trim();
+        line = line.trim();
+        if (!line) continue;
 
-        // CHAPTER felismerés
+        // CHAPTER
         if (/^Chapter\s+\d+/i.test(line)) {
 
-            const chapterNumber = line.match(/\d+/)[0];
-            const title = (lines[i + 1] || "").trim();
+            const num = line.match(/\d+/)[0];
+            const title = "";
 
             currentChapter = {
-                id: chapterNumber,
+                id: num,
                 title,
                 domains: [],
                 rawContent: ""
@@ -136,7 +139,6 @@ function parseReview(text) {
 
             chapters.push(currentChapter);
             currentSection = null;
-
             continue;
         }
 
@@ -144,25 +146,24 @@ function parseReview(text) {
 
         currentChapter.rawContent += line + "\n";
 
-        // SECTION felismerés (JAVÍTOTT!)
-        const isSection =
-            /^\d+\.\d+\s+[A-Za-z]/.test(line) &&   // csak ha szöveg is van utána
-            line.length < 120 &&                  // ne legyen hosszú mondat
-            !/million|billion|thousand/i.test(line); // számos mondatok kizárása
+        // SECTION detection (robust)
+        const sectionMatch = line.match(/^(\d+\.\d+)\s+(.+)/);
 
-        if (isSection) {
+        const isValidSection =
+            sectionMatch &&
+            sectionMatch[2].length > 2 &&
+            sectionMatch[2].length < 120 &&
+            /[A-Za-z]/.test(sectionMatch[2]);
 
-            const match = line.match(/^(\d+\.\d+)\s+(.+)/);
-
-            if (!match) continue;
+        if (isValidSection) {
 
             currentSection = {
-                id: match[1],
-                title: match[2],
+                id: sectionMatch[1],
+                title: sectionMatch[2],
                 content: ""
             };
 
-            const domain = detectDomain(line);
+            let domain = detectDomain(line);
 
             let domainObj =
                 currentChapter.domains.find(d => d.name === domain);
@@ -177,7 +178,7 @@ function parseReview(text) {
             continue;
         }
 
-        // CONTENT gyűjtés
+        // CONTENT
         if (currentSection) {
             currentSection.content += line + "\n";
         }
@@ -185,110 +186,101 @@ function parseReview(text) {
 
     return chapters;
 }
-// -------------------------
-// SIMPLE DOMAIN DETECTION
-// -------------------------
+
+// --------------------
+// DOMAIN DETECTION
+// --------------------
 function detectDomain(text) {
 
     const rules = [
         { name: "Governance", keywords: ["policy", "governance", "framework", "compliance"] },
-        { name: "Risk Management", keywords: ["risk", "threat", "vulnerability", "impact"] },
-        { name: "Audit Process", keywords: ["audit", "control", "evidence", "test"] },
-        { name: "Security Operations", keywords: ["incident", "response", "monitoring"] }
+        { name: "Risk", keywords: ["risk", "threat", "vulnerability", "impact"] },
+        { name: "Audit", keywords: ["audit", "control", "evidence", "test"] },
+        { name: "Security Ops", keywords: ["incident", "response", "monitoring"] }
     ];
 
-    for (const rule of rules) {
-        for (const kw of rule.keywords) {
-            if (text.toLowerCase().includes(kw)) {
-                return rule.name;
-            }
+    const t = text.toLowerCase();
+
+    for (const r of rules) {
+        for (const k of r.keywords) {
+            if (t.includes(k)) return r.name;
         }
     }
 
     return "General";
 }
 
-// -------------------------
-// TREE RENDER
-// -------------------------
+// --------------------
+// RENDER TREE
+// --------------------
 function renderTree() {
 
     tree.innerHTML = "";
 
-    reviewData.forEach(chapter => {
+    reviewData.forEach(ch => {
 
-        const chapterDiv = document.createElement("div");
-        chapterDiv.className = "chapter";
-        chapterDiv.textContent = `Chapter ${chapter.id} - ${chapter.title}`;
+        const c = document.createElement("div");
+        c.className = "chapter";
+        c.textContent = `Chapter ${ch.id}`;
+        c.onclick = () => showChapter(ch);
 
-        chapterDiv.onclick = () => showChapter(chapter);
+        tree.appendChild(c);
 
-        tree.appendChild(chapterDiv);
+        ch.domains.forEach(d => {
 
-        chapter.domains.forEach(domain => {
+            const dom = document.createElement("div");
+            dom.textContent = "📁 " + d.name;
+            dom.style.marginLeft = "10px";
+            dom.style.fontWeight = "bold";
 
-            const d = document.createElement("div");
-            d.textContent = `📁 ${domain.name}`;
-            d.style.marginLeft = "10px";
-            d.style.fontWeight = "bold";
+            tree.appendChild(dom);
 
-            tree.appendChild(d);
+            d.sections.forEach(s => {
 
-            domain.sections.forEach(section => {
+                const sec = document.createElement("div");
+                sec.className = "section";
+                sec.textContent = `${s.id} ${s.title}`;
 
-                const s = document.createElement("div");
-                s.className = "section";
-                s.textContent = `${section.id} ${section.title}`;
-
-                s.onclick = (e) => {
+                sec.onclick = (e) => {
                     e.stopPropagation();
-                    showSection(section);
+                    showSection(s);
                 };
 
-                tree.appendChild(s);
-
+                tree.appendChild(sec);
             });
-
         });
-
     });
-
 }
 
-// -------------------------
+// --------------------
 // VIEW CHAPTER
-// -------------------------
-function showChapter(chapter) {
+// --------------------
+function showChapter(ch) {
 
-    contentTitle.textContent =
-        `Chapter ${chapter.id} - ${chapter.title}`;
+    contentTitle.textContent = `Chapter ${ch.id}`;
 
     contentArea.innerHTML =
-        `<pre>${escapeHtml(chapter.rawContent)}</pre>`;
-
+        `<pre>${escapeHtml(ch.rawContent)}</pre>`;
 }
 
-// -------------------------
+// --------------------
 // VIEW SECTION
-// -------------------------
-function showSection(section) {
+// --------------------
+function showSection(s) {
 
-    contentTitle.textContent =
-        `${section.id} - ${section.title}`;
+    contentTitle.textContent = `${s.id} ${s.title}`;
 
     contentArea.innerHTML =
-        `<pre>${escapeHtml(section.content)}</pre>`;
-
+        `<pre>${escapeHtml(s.content)}</pre>`;
 }
 
-// -------------------------
-// HTML ESCAPE
-// -------------------------
+// --------------------
+// ESCAPE HTML
+// --------------------
 function escapeHtml(text) {
 
     return text
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
-
 }
