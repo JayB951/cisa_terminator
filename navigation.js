@@ -120,7 +120,103 @@ const navigationData = [
         { id: "1.10.4", title: "Monitoring" }
       ]
     }
+  ]{
+  id: 'chapter-2',
+  title: 'Chapter 2 - Governance and Management of IT',
+  children: [
+    {
+      id: '2.1',
+      title: 'IT Governance and IT Strategy',
+      children: [
+        { id: '2.1.1', title: 'IT Governance Frameworks and Standards' },
+        { id: '2.1.2', title: 'Enterprise Governance of IT' },
+        { id: '2.1.3', title: 'Governance Committees' },
+        { id: '2.1.4', title: 'IT Strategy' },
+        { id: '2.1.5', title: 'Policies, Standards and Procedures' },
+        { id: '2.1.6', title: 'Enterprise Architecture' },
+        { id: '2.1.7', title: 'Enterprise Risk Management' },
+        { id: '2.1.8', title: 'Maturity Models' },
+        { id: '2.1.9', title: 'Laws, Regulations and Industry Standards' }
+      ]
+    },
+
+    {
+      id: '2.2',
+      title: 'IT Management',
+      children: [
+        { id: '2.2.1', title: 'IT Resource Management' },
+        { id: '2.2.2', title: 'IT Performance Monitoring and Reporting' },
+        { id: '2.2.3', title: 'IT Organizational Structure' },
+        { id: '2.2.4', title: 'Segregation of Duties' },
+        { id: '2.2.5', title: 'IT Human Resource Management' }
+      ]
+    },
+
+    {
+      id: '2.3',
+      title: 'Information Systems Governance',
+      children: [
+        { id: '2.3.1', title: 'Governance Structures' },
+        { id: '2.3.2', title: 'Governance Processes' },
+        { id: '2.3.3', title: 'Governance Metrics' }
+      ]
+    },
+
+    {
+      id: '2.4',
+      title: 'Risk Management',
+      children: [
+        { id: '2.4.1', title: 'Risk Management Frameworks' },
+        { id: '2.4.2', title: 'Risk Assessment' },
+        { id: '2.4.3', title: 'Risk Analysis and Evaluation' },
+        { id: '2.4.4', title: 'Risk Response and Treatment' },
+        { id: '2.4.5', title: 'Risk Monitoring and Reporting' }
+      ]
+    },
+
+    {
+      id: '2.5',
+      title: 'IT Policies and Procedures',
+      children: [
+        { id: '2.5.1', title: 'Policy Framework' },
+        { id: '2.5.2', title: 'Standards and Procedures' },
+        { id: '2.5.3', title: 'Compliance Monitoring' }
+      ]
+    },
+
+    {
+      id: '2.6',
+      title: 'IT Resource Management',
+      children: [
+        { id: '2.6.1', title: 'Human Resources' },
+        { id: '2.6.2', title: 'Financial Resources' },
+        { id: '2.6.3', title: 'Technology Resources' },
+        { id: '2.6.4', title: 'Vendor Management' }
+      ]
+    },
+
+    {
+      id: '2.7',
+      title: 'Quality Management',
+      children: [
+        { id: '2.7.1', title: 'Quality Assurance' },
+        { id: '2.7.2', title: 'Quality Control' },
+        { id: '2.7.3', title: 'Continuous Improvement' }
+      ]
+    },
+
+    {
+      id: '2.8',
+      title: 'Monitoring and Reporting',
+      children: [
+        { id: '2.8.1', title: 'Performance Metrics' },
+        { id: '2.8.2', title: 'Balanced Scorecard' },
+        { id: '2.8.3', title: 'Key Risk Indicators (KRIs)' },
+        { id: '2.8.4', title: 'Key Performance Indicators (KPIs)' }
+      ]
+    }
   ]
+},
 },
 ];
 
