@@ -3,83 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>CISA Terminator</title>
 
 <style>
-
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f4f6f9;
-}
-
-header{
-    background:#1e293b;
-    color:white;
-    padding:16px;
-}
-
-.container{
-    display:flex;
-    height:calc(100vh - 64px);
-}
-
-.sidebar{
-    width:350px;
-    background:white;
-    border-right:1px solid #ddd;
-    overflow:auto;
-    padding:15px;
-}
-
-.content{
-    flex:1;
-    background:white;
-    overflow:auto;
-    padding:20px;
-}
-
-.card{
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:12px;
-    margin-bottom:15px;
-}
-
-button{
-    padding:10px 16px;
-    cursor:pointer;
-}
-
-.chapter{
-    margin-top:12px;
-    font-weight:bold;
-}
-
-.section{
-    margin-left:20px;
-    cursor:pointer;
-    padding:4px;
-}
-
-.section:hover{
-    background:#eef;
-}
-
-textarea{
-    width:100%;
-    height:200px;
-}
-
+body{margin:0;font-family:Arial;background:#f4f6f9;}
+header{background:#1e293b;color:white;padding:16px;}
+.container{display:flex;height:calc(100vh - 64px);}
+.sidebar{width:350px;background:white;border-right:1px solid #ddd;overflow:auto;padding:15px;}
+.content{flex:1;background:white;overflow:auto;padding:20px;}
+.card{border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:15px;}
+button{padding:10px 16px;cursor:pointer;}
+.chapter{margin-top:12px;font-weight:bold;}
+.section{margin-left:20px;cursor:pointer;padding:4px;}
+.section:hover{background:#eef;}
 </style>
 </head>
 
 <body>
 
-<header>
-<h1>CISA Terminator</h1>
-</header>
+<header><h1>CISA Terminator</h1></header>
 
 <div class="container">
 
@@ -89,19 +31,28 @@ textarea{
 <h3>Review Import</h3>
 
 <label>Review TXT:</label><br>
-<input type="file" id="txtFile" accept=".txt">
-<br><br>
+<input type="file" id="reviewFile" accept=".txt"><br><br>
 
-<label>Domains JSON:</label><br>
-<input type="file" id="domainFile" accept=".json">
-<br><br>
+<h3>Domains (5 file)</h3>
 
-<button id="importBtn">Import Review</button>
-<br><br>
+<label>Domain 1:</label><br>
+<input type="file" id="dom1" accept=".txt"><br><br>
 
-<button id="clearBtn" style="background:#c62828;color:white;">
-Clear DB
-</button>
+<label>Domain 2:</label><br>
+<input type="file" id="dom2" accept=".txt"><br><br>
+
+<label>Domain 3:</label><br>
+<input type="file" id="dom3" accept=".txt"><br><br>
+
+<label>Domain 4:</label><br>
+<input type="file" id="dom4" accept=".txt"><br><br>
+
+<label>Domain 5:</label><br>
+<input type="file" id="dom5" accept=".txt"><br><br>
+
+<button id="importBtn">Import</button><br><br>
+
+<button id="clearBtn" style="background:#c62828;color:white;">Clear DB</button>
 </div>
 
 <div class="card">
@@ -122,12 +73,11 @@ Clear DB
 
 <div class="content">
 <h2 id="contentTitle">Welcome</h2>
-<div id="contentArea">Importáld a Review TXT-t és a Domains JSON-t.</div>
+<div id="contentArea">Importáld a Review TXT-t és az 5 Domain TXT-t.</div>
 </div>
 
 </div>
 
 <script src="app.js"></script>
-
 </body>
 </html>
