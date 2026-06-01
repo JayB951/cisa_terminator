@@ -225,49 +225,114 @@ function escapeHtml(text) {
 }
 
 // --------------------
+// STUDY TOOLS
+// --------------------
+function generateSummary(chapter) {
+    let summary = `Summary of Chapter ${chapter.id}\n\n`;
+    chapter.domains.forEach(domain => {
+        summary += `== ${domain.name} ==\n`;
+        domain.sections.forEach(sec => {
+            summary += `• ${sec.id} ${sec.title}\n`;
+        });
+        summary += "\n";
+    });
+    return summary;
+}
+
+function generateFlashcards(chapter) {
+    const cards = [];
+    chapter.domains.forEach(domain => {
+        domain.sections.forEach(sec => {
+            cards.push({
+                front: `${sec.id} ${sec.title}`,
+                back: sec.content.split("\n")[0] || "No content"
+            });
+        });
+    });
+    return cards;
+}
+
+function generateKeyTerms(chapter) {
+    const terms = new Set();
+    chapter.domains.forEach(domain => {
+        domain.sections.forEach(sec => {
+            const words = sec.content.split(/\W+/);
+            words.forEach(w => {
+                if (w.length > 4) terms.add(w.toLowerCase());
+            });
+        });
+    });
+    return Array.from(terms).slice(0, 50);
+}
+
+function generateCheatSheet(chapter) {
+    let sheet = `Cheat Sheet – Chapter ${chapter.id}\n\n`;
+    chapter.domains.forEach(domain => {
+        sheet += `## ${domain.name}\n`;
+        domain.sections.forEach(sec => {
+            sheet += `- ${sec.id}: ${sec.title}\n`;
+        });
+        sheet += "\n";
+    });
+    return sheet;
+}
+
+function generateLogicalMap(chapter) {
+    let map = `Logical Map – Chapter ${chapter.id}\n\n`;
+    chapter.domains.forEach(domain => {
+        map += `${domain.name}\n`;
+        domain.sections.forEach(sec => {
+            map += `   └─ ${sec.id} ${sec.title}\n`;
+        });
+        map += "\n";
+    });
+    return map;
+}
+
+// --------------------
 // STUDY TOOL UI
 // --------------------
 function getActiveChapter() {
-    return reviewData[0] || null;
-}
+     return reviewData[0] || null;
+ }
 
-function showSummary() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Summary";
-    contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
-}
+ function showSummary() {
+     const ch = getActiveChapter();
+     if (!ch) return;
+     contentTitle.textContent = "Summary";
+     contentArea.innerHTML = `<pre>${generateSummary(ch)}</pre>`;
+ }
 
-function showFlashcards() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    const cards = generateFlashcards(ch);
-    let html = "";
-    cards.forEach(c => {
-        html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
-    });
-    contentTitle.textContent = "Flashcards";
-    contentArea.innerHTML = html;
-}
+ function showFlashcards() {
+     const ch = getActiveChapter();
+     if (!ch) return;
+     const cards = generateFlashcards(ch);
+     let html = "";
+     cards.forEach(c => {
+         html += `<div class="card"><b>${c.front}</b><br>${c.back}</div>`;
+     });
+     contentTitle.textContent = "Flashcards";
+     contentArea.innerHTML = html;
+ }
 
-function showKeyTerms() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    const terms = generateKeyTerms(ch);
-    contentTitle.textContent = "Key Terms";
-    contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
-}
+ function showKeyTerms() {
+     const ch = getActiveChapter();
+     if (!ch) return;
+     const terms = generateKeyTerms(ch);
+     contentTitle.textContent = "Key Terms";
+     contentArea.innerHTML = `<pre>${terms.join("\n")}</pre>`;
+ }
 
-function showCheatSheet() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Cheat Sheet";
-    contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
-}
+ function showCheatSheet() {
+     const ch = getActiveChapter();
+     if (!ch) return;
+     contentTitle.textContent = "Cheat Sheet";
+     contentArea.innerHTML = `<pre>${generateCheatSheet(ch)}</pre>`;
+ }
 
-function showLogicalMap() {
-    const ch = getActiveChapter();
-    if (!ch) return;
-    contentTitle.textContent = "Logical Map";
-    contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
-}
+ function showLogicalMap() {
+     const ch = getActiveChapter();
+     if (!ch) return;
+     contentTitle.textContent = "Logical Map";
+     contentArea.innerHTML = `<pre>${generateLogicalMap(ch)}</pre>`;
+ }
