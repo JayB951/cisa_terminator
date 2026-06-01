@@ -5,16 +5,10 @@
 let pdfDoc = null;
 let currentPage = 1;
 let totalPages = 0;
-let currentScale = 1.25;
-
-const canvas =
-    document.getElementById("pdfCanvas");
-
-const ctx =
-    canvas.getContext("2d");
+let scale = 1.25;
 
 // =====================================
-// PDF.JS BETÖLTÉS
+// PDF.JS IMPORT
 // =====================================
 
 let pdfjsLib = null;
@@ -29,26 +23,45 @@ async function initPdfJs() {
         "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
 
     console.log("PDF.js loaded");
+
 }
 
 initPdfJs();
 
 // =====================================
-// PDF BETÖLTÉS
+// ELEMENTS
+// =====================================
+
+const canvas =
+    document.getElementById(
+        "pdfCanvas"
+    );
+
+const ctx =
+    canvas.getContext(
+        "2d"
+    );
+
+// =====================================
+// LOAD PDF
 // =====================================
 
 document
-    .getElementById("loadPdfBtn")
+    .getElementById(
+        "loadPdfBtn"
+    )
     .addEventListener(
         "click",
-        openPdf
+        loadPdf
     );
 
-async function openPdf() {
+async function loadPdf() {
 
     const file =
         document
-        .getElementById("pdfFile")
+        .getElementById(
+            "pdfFile"
+        )
         .files[0];
 
     if (!file) {
@@ -58,41 +71,48 @@ async function openPdf() {
         );
 
         return;
+
     }
 
     try {
 
+        console.log(
+            "Loading PDF..."
+        );
+
         const buffer =
             await file.arrayBuffer();
 
+        const task =
+            pdfjsLib.getDocument({
+                data: buffer
+            });
+
         pdfDoc =
-            await pdfjsLib
-                .getDocument({
-                    data: buffer
-                })
-                .promise;
+            await task.promise;
 
         totalPages =
             pdfDoc.numPages;
 
         currentPage = 1;
 
-        renderPage(
+        await renderPage(
             currentPage
         );
 
         console.log(
-            "Loaded pages:",
-            totalPages
+            "PDF loaded",
+            totalPages,
+            "pages"
         );
 
     }
-    catch (err) {
+    catch(err) {
 
         console.error(err);
 
         alert(
-            "Nem sikerült megnyitni a PDF-et."
+            "PDF betöltési hiba."
         );
 
     }
@@ -100,7 +120,7 @@ async function openPdf() {
 }
 
 // =====================================
-// PAGE RENDER
+// RENDER PAGE
 // =====================================
 
 async function renderPage(pageNumber) {
@@ -115,7 +135,7 @@ async function renderPage(pageNumber) {
 
     const viewport =
         page.getViewport({
-            scale: currentScale
+            scale
         });
 
     canvas.width =
@@ -151,10 +171,23 @@ function updatePageInfo() {
         .innerText =
         `Page ${currentPage} / ${totalPages}`;
 
+    const input =
+        document
+        .getElementById(
+            "gotoPageInput"
+        );
+
+    if (input) {
+
+        input.value =
+            currentPage;
+
+    }
+
 }
 
 // =====================================
-// NEXT
+// NEXT PAGE
 // =====================================
 
 document
@@ -163,14 +196,17 @@ document
     )
     .addEventListener(
         "click",
-        () => {
+        async ()=>{
+
+        if (!pdfDoc)
+            return;
 
         if (
             currentPage <
             totalPages
         ) {
 
-            renderPage(
+            await renderPage(
                 currentPage + 1
             );
 
@@ -179,7 +215,7 @@ document
     });
 
 // =====================================
-// PREVIOUS
+// PREVIOUS PAGE
 // =====================================
 
 document
@@ -188,13 +224,16 @@ document
     )
     .addEventListener(
         "click",
-        () => {
+        async ()=>{
+
+        if (!pdfDoc)
+            return;
 
         if (
             currentPage > 1
         ) {
 
-            renderPage(
+            await renderPage(
                 currentPage - 1
             );
 
@@ -203,7 +242,77 @@ document
     });
 
 // =====================================
-// NAVIGATION API
+// GOTO PAGE
+// =====================================
+
+document
+    .getElementById(
+        "gotoPageBtn"
+    )
+    .addEventListener(
+        "click",
+        gotoPageFromInput
+    );
+
+document
+    .getElementById(
+        "gotoPageInput"
+    )
+    .addEventListener(
+        "keydown",
+        (event)=>{
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            gotoPageFromInput();
+
+        }
+
+    });
+
+async function gotoPageFromInput() {
+
+    if (!pdfDoc)
+        return;
+
+    const pageNumber =
+        Number(
+            document
+            .getElementById(
+                "gotoPageInput"
+            )
+            .value
+        );
+
+    if (
+        isNaN(pageNumber)
+    )
+        return;
+
+    if (
+        pageNumber < 1 ||
+        pageNumber > totalPages
+    ) {
+
+        alert(
+            `Érvényes oldal: 1-${totalPages}`
+        );
+
+        return;
+
+    }
+
+    await renderPage(
+        pageNumber
+    );
+
+}
+
+// =====================================
+// DOMAIN NAVIGATION API
 // =====================================
 
 async function goToPdfPage(
@@ -229,87 +338,54 @@ window.goToPdfPage =
     goToPdfPage;
 
 // =====================================
-// ZOOM API
-// =====================================
-
-async function zoomIn() {
-
-    currentScale += 0.15;
-
-    await renderPage(
-        currentPage
-    );
-
-}
-
-async function zoomOut() {
-
-    currentScale -= 0.15;
-
-    if (
-        currentScale < 0.5
-    ) {
-
-        currentScale = 0.5;
-
-    }
-
-    await renderPage(
-        currentPage
-    );
-
-}
-
-window.zoomIn =
-    zoomIn;
-
-window.zoomOut =
-    zoomOut;
-
-// =====================================
 // KEYBOARD
 // =====================================
 
-document.addEventListener(
-    "keydown",
-    event => {
+document
+    .addEventListener(
+        "keydown",
+        async (event)=>{
 
-    if (!pdfDoc)
-        return;
-
-    if (
-        event.key ===
-        "ArrowRight"
-    ) {
+        if (!pdfDoc)
+            return;
 
         if (
-            currentPage <
-            totalPages
+            event.key ===
+            "ArrowRight"
         ) {
 
-            renderPage(
-                currentPage + 1
-            );
+            if (
+                currentPage <
+                totalPages
+            ) {
+
+                await renderPage(
+                    currentPage + 1
+                );
+
+            }
 
         }
 
-    }
-
-    if (
-        event.key ===
-        "ArrowLeft"
-    ) {
-
         if (
-            currentPage > 1
+            event.key ===
+            "ArrowLeft"
         ) {
 
-            renderPage(
-                currentPage - 1
-            );
+            if (
+                currentPage > 1
+            ) {
+
+                await renderPage(
+                    currentPage - 1
+                );
+
+            }
 
         }
 
-    }
+    });
 
-});
+console.log(
+    "PDF Viewer Ready"
+);
