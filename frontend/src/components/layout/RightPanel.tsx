@@ -5,10 +5,12 @@ import {
   Card,
   CardActionArea,
   CardContent,
-  TextField,
-  Button,
   Stack,
 } from "@mui/material";
+
+import NotesHeader from "../notes/NotesHeader";
+import PageNotesEditor from "../notes/PageNotesEditor";
+import NotesExportButton from "../notes/NotesExportButton";
 
 export default function RightPanel() {
   return (
@@ -120,37 +122,13 @@ export default function RightPanel() {
         Saját Jegyzetek
       </Typography>
 
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        gutterBottom
-      >
-        Oldal: —
-      </Typography>
+      <NotesHeader />
 
-      <TextField
-        multiline
-        rows={12}
-        fullWidth
-        placeholder="Ide írhatod az aktuális oldalhoz tartozó jegyzeteidet..."
-      />
+      <PageNotesEditor />
 
-      <Button
-        variant="contained"
-        fullWidth
-        sx={{ mt: 2 }}
-      >
-        Jegyzet mentése
-      </Button>
-
-      <Typography
-        variant="caption"
-        display="block"
-        sx={{ mt: 1 }}
-        color="text.secondary"
-      >
-        Utolsó mentés: —
-      </Typography>
+      <Box mt={2}>
+        <NotesExportButton />
+      </Box>
     </Box>
   );
 }
