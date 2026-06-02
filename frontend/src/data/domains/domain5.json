@@ -1,0 +1,18 @@
+{
+  "id": "domain5",
+  "name": "Protection of Information Assets",
+  "topics": [
+    {
+      "title": "Access Control",
+      "page": 16
+    },
+    {
+      "title": "Cryptography",
+      "page": 48
+    },
+    {
+      "title": "Incident Response",
+      "page": 95
+    }
+  ]
+}
