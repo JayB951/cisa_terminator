@@ -1,0 +1,22 @@
+{
+  "id": "domain2",
+  "name": "Governance and Management of IT",
+  "topics": [
+    {
+      "title": "IT Governance",
+      "page": 10
+    },
+    {
+      "title": "Organizational Structure",
+      "page": 28
+    },
+    {
+      "title": "Policies and Standards",
+      "page": 45
+    },
+    {
+      "title": "Risk Governance",
+      "page": 62
+    }
+  ]
+}
