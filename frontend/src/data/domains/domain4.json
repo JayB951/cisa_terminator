@@ -1,0 +1,18 @@
+{
+  "id": "domain4",
+  "name": "Information Systems Operations and Business Resilience",
+  "topics": [
+    {
+      "title": "Operations",
+      "page": 22
+    },
+    {
+      "title": "Backup",
+      "page": 53
+    },
+    {
+      "title": "Disaster Recovery",
+      "page": 81
+    }
+  ]
+}
