@@ -1,39 +1,22 @@
-import {
-  Box,
-  TextField,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box } from "@mui/material";
 
-import SearchIcon from "@mui/icons-material/Search";
+import PdfCurrentPage from "./PdfCurrentPage";
+import PdfJumpToPage from "./PdfJumpToPage";
 
 export default function PdfToolbar() {
   return (
     <Box
       sx={{
         display: "flex",
-        gap: 2,
+        justifyContent:
+          "space-between",
         alignItems: "center",
         p: 1,
       }}
     >
-      <TextField
-        label="Keresés"
-        size="small"
-        sx={{ width: 300 }}
-      />
+      <PdfJumpToPage />
 
-      <IconButton>
-        <SearchIcon />
-      </IconButton>
-
-      <Typography variant="body2">
-        Oldal: —
-      </Typography>
-
-      <Typography variant="body2">
-        Zoom: 100%
-      </Typography>
+      <PdfCurrentPage />
     </Box>
   );
 }
