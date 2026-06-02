@@ -1,0 +1,26 @@
+{
+  "id": "domain1",
+  "name": "Information Systems Auditing Process",
+  "topics": [
+    {
+      "title": "Audit Planning",
+      "page": 12
+    },
+    {
+      "title": "Risk Assessment",
+      "page": 24
+    },
+    {
+      "title": "Internal Controls",
+      "page": 41
+    },
+    {
+      "title": "Evidence Collection",
+      "page": 67
+    },
+    {
+      "title": "Audit Reporting",
+      "page": 89
+    }
+  ]
+}
